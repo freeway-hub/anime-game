@@ -1,5 +1,6 @@
 import * as THREE from "three/webgpu";
 import type BVHEcctrl from "../lib/ecctrl/BVHEcctrl";
+import { canChainRoll } from "./RollContract";
 
 export const defaultRollDurationSeconds = 0.62;
 export const defaultRollSpeed = 7.2;
@@ -7,6 +8,7 @@ export const defaultRollCooldownSeconds = 0.45;
 
 export interface RollCharacter {
   playRoll(): boolean;
+  getRollProgress(): number | null;
 }
 
 export interface RollCamera {
@@ -43,7 +45,11 @@ export function createRoll(
     ) {
       return;
     }
-    if (active || elapsed < nextAllowedTime || !controller.characterStatus.isOnGround) return;
+
+    if (elapsed < nextAllowedTime || !controller.characterStatus.isOnGround) return;
+
+    const rollProgress = active ? characterRuntime.getRollProgress() : null;
+    if (active && !canChainRoll(rollProgress)) return;
     if (!characterRuntime.playRoll()) return;
 
     controller.model.getWorldDirection(direction);
@@ -58,6 +64,7 @@ export function createRoll(
     active = true;
     remaining = duration;
     nextAllowedTime = elapsed + cooldown;
+    controller.setJumpSuppressed(true);
     controller.setLinVel(
       new THREE.Vector3(
         direction.x * speed,
@@ -72,6 +79,7 @@ export function createRoll(
     active = false;
     remaining = 0;
     controller.resetLinVel();
+    controller.setJumpSuppressed(false);
   };
 
   window.addEventListener("keydown", onKeyDown);
@@ -90,6 +98,7 @@ export function createRoll(
       if (remaining <= 0) {
         active = false;
         controller.resetLinVel();
+        controller.setJumpSuppressed(false);
         return;
       }
 
@@ -107,6 +116,7 @@ export function createRoll(
         active = false;
         remaining = 0;
         controller.resetLinVel();
+        controller.setJumpSuppressed(false);
       }
     },
     dispose() {
@@ -114,6 +124,7 @@ export function createRoll(
       window.removeEventListener("blur", onBlur);
       active = false;
       controller.resetLinVel();
+      controller.setJumpSuppressed(false);
     },
   };
 }

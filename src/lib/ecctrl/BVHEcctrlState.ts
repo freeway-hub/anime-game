@@ -43,6 +43,8 @@ export class BVHEcctrlState {
   rightwardState = false;
   runState = false;
   jumpState = false;
+  jumpSuppressed = false;
+  jumpInputConsumed = false;
 
   contactDepth = 0;
   totalDepth = 0;

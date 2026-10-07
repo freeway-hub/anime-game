@@ -257,7 +257,14 @@ export function applyMovementInput(
   if (movement.rightward !== undefined) state.rightwardState = movement.rightward;
   if (movement.joystick) state.joystickState.set(movement.joystick.x, movement.joystick.y);
   if (movement.run !== undefined) state.runState = movement.run;
-  if (movement.jump !== undefined) state.jumpState = movement.jump;
+  if (movement.jump !== undefined) {
+    if (!movement.jump) {
+      state.jumpState = false;
+      if (!state.jumpSuppressed) state.jumpInputConsumed = false;
+    } else if (!state.jumpSuppressed && !state.jumpInputConsumed) {
+      state.jumpState = true;
+    }
+  }
 }
 
 function updateCharacterAnimation(

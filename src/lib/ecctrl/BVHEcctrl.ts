@@ -89,6 +89,14 @@ export default class BVHEcctrl implements BVHEcctrlApi {
     applyMovementInput(this.state, input);
   }
 
+  setJumpSuppressed(suppressed: boolean) {
+    this.state.jumpSuppressed = suppressed;
+    if (suppressed) {
+      this.state.jumpState = false;
+      this.state.jumpInputConsumed = true;
+    }
+  }
+
   setOptions(options: Partial<EcctrlOptions>) {
     const next = resolveEcctrlOptionsUpdate(
       this.state.options,
@@ -124,7 +132,12 @@ export default class BVHEcctrl implements BVHEcctrlApi {
     const leftward = this.state.leftwardState;
     const rightward = this.state.rightwardState;
     const run = this.state.runState || buttons.run;
+    if (!this.state.jumpSuppressed && !this.state.jumpState && !buttons.jump) {
+      this.state.jumpInputConsumed = false;
+    }
     const jump = !this.state.characterStatus.isAttacking &&
+      !this.state.jumpSuppressed &&
+      !this.state.jumpInputConsumed &&
       (this.state.jumpState || buttons.jump);
 
     setInputDirection(this.state, {

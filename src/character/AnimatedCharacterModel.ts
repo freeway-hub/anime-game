@@ -20,6 +20,7 @@ import {
   requiredAnimationClipNames,
   statusToActionMap,
 } from "./AnimationContract";
+import { canChainRoll } from "../movement/RollContract";
 import {
   applyCharacterShadowSettings,
   type CharacterShadowSettings,
@@ -157,8 +158,20 @@ export class AnimatedCharacterModel {
     return Math.min(action.time / action.getClip().duration, 1);
   }
 
+  getRollProgress() {
+    if (this.previousActionName !== rollActionName || this.canPlayNext) return null;
+    const action = this.actions.get(rollActionName);
+    if (!action) return null;
+    return Math.min(action.time / action.getClip().duration, 1);
+  }
+
   playRoll() {
-    if (!this.characterStores.status.isOnGround || !this.canPlayNext) return false;
+    if (!this.characterStores.status.isOnGround) return false;
+
+    const rollPlaying = this.previousActionName === rollActionName && !this.canPlayNext;
+    if (!rollPlaying && !this.canPlayNext) return false;
+    if (rollPlaying && !canChainRoll(this.getRollProgress())) return false;
+
     this.playAction(rollActionName, this.previousActionName);
     this.previousActionName = rollActionName;
     return true;
@@ -272,7 +285,7 @@ export class AnimatedCharacterModel {
           : 1.6;
       nextAction.setLoop(THREE.LoopOnce, 1);
       nextAction.clampWhenFinished = true;
-      if (previousAction) nextAction.crossFadeFrom(previousAction, 0.1, false);
+      if (previousAction && previousAction !== nextAction) nextAction.crossFadeFrom(previousAction, 0.1, false);
       nextAction.play();
       return;
     }
