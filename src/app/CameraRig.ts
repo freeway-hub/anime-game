@@ -64,6 +64,7 @@ interface CameraRigState {
   followY: number | null;
   freePosition: THREE.Vector3;
   targetLockTarget: THREE.Object3D | null;
+  targetLockBlend: number;
   dragging: boolean;
   pointerId: number;
   pointerX: number;
@@ -106,6 +107,7 @@ export function createCameraRig(
     followY: null,
     freePosition: new THREE.Vector3(),
     targetLockTarget: null,
+    targetLockBlend: 0,
     dragging: false,
     pointerId: -1,
     pointerX: 0,
@@ -117,6 +119,7 @@ export function createCameraRig(
   const cameraDesiredPosition = new THREE.Vector3();
   const cameraLookTarget = new THREE.Vector3();
   const targetWorldPosition = new THREE.Vector3();
+  const targetLockPosition = new THREE.Vector3();
   const cameraCollisionPosition = new THREE.Vector3();
   const collisionScratch = createCameraCollisionScratch();
   const freeCameraInput = createFreeCameraKeyboardInput();
@@ -213,7 +216,12 @@ export function createCameraRig(
       if (!enabled) releasePointerCapture(state, canvas);
     },
     setTargetLockTarget(target) {
+      if (state.targetLockTarget === target) return;
       state.targetLockTarget = target;
+      if (target) {
+        target.updateWorldMatrix(true, false);
+        targetLockPosition.setFromMatrixPosition(target.matrixWorld);
+      }
     },
     update(delta) {
       updateGamepadCamera(state, delta);
@@ -242,12 +250,15 @@ export function createCameraRig(
       cameraOffset.multiplyScalar(state.distance);
       cameraDesiredPosition.copy(cameraTarget).add(cameraOffset);
       camera.position.lerp(cameraDesiredPosition, 1 - Math.pow(0.001, delta));
+      const targetLockBlend = smoothTargetLockBlend(state, delta);
       cameraLookTarget.copy(cameraTarget);
       if (state.targetLockTarget) {
-        targetWorldPosition.setFromMatrixPosition(
+        targetLockPosition.setFromMatrixPosition(
           state.targetLockTarget.matrixWorld
         );
-        cameraLookTarget.lerp(targetWorldPosition, 0.5);
+      }
+      if (targetLockBlend > 0) {
+        cameraLookTarget.lerp(targetLockPosition, targetLockBlend * 0.5);
       }
       if (state.settings.collisionEnabled) {
         cameraCollisionPosition.copy(camera.position);
@@ -287,6 +298,14 @@ function updateGamepadCamera(state: CameraRigState, delta: number) {
   if (!cameraActive) return;
   state.yaw -= cameraX * delta * 2.7;
   state.pitch = clampCameraPitch(state, state.pitch - cameraY * delta * 1.8);
+}
+
+function smoothTargetLockBlend(state: CameraRigState, delta: number): number {
+  const targetBlend = state.targetLockTarget ? 1 : 0;
+  state.targetLockBlend +=
+    (targetBlend - state.targetLockBlend) *
+    (1 - Math.pow(0.001, delta * 2.5));
+  return state.targetLockBlend;
 }
 
 function smoothFollowY(
