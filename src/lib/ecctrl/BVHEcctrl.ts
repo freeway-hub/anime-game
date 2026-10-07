@@ -117,7 +117,8 @@ export default class BVHEcctrl implements BVHEcctrlApi {
     const leftward = this.state.leftwardState;
     const rightward = this.state.rightwardState;
     const run = this.state.runState || buttons.run;
-    const jump = this.state.jumpState || buttons.jump;
+    const jump = !characterStatus.isAttacking &&
+      (this.state.jumpState || buttons.jump);
 
     setInputDirection(this.state, {
       forward,

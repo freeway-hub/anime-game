@@ -1,7 +1,6 @@
 import * as THREE from "three/webgpu";
 import { StaticCollider } from "../lib/ecctrl/index";
 import { disposeObject3D } from "../lib/ecctrl/Object3DUtils";
-import { createKinematicActors } from "./LevelGimmicks";
 import { createLevelLayout } from "./LevelLayout";
 import {
   LEVEL_STORAGE_KEY,
@@ -29,17 +28,13 @@ export interface Level {
 export function createLevel(scene: THREE.Scene): Level {
   const level = createLevelLayout(scene);
   const staticCollider = new StaticCollider(level, { scene, bvhName: "level" });
-  const actors = createKinematicActors(scene);
   let editMode = false;
   let staticColliderDirty = false;
   const markStaticColliderDirty = () => {
     staticColliderDirty = true;
   };
   const staticTargets = createStaticEditorTargets(level, markStaticColliderDirty);
-  const editorTargets = [
-    ...staticTargets,
-    ...actors.map((actor) => actor.getEditorTarget()),
-  ];
+  const editorTargets = [...staticTargets];
 
   const rebuildDirtyStaticCollider = () => {
     if (!staticColliderDirty) return;
@@ -85,25 +80,14 @@ export function createLevel(scene: THREE.Scene): Level {
     setEditMode(active) {
       if (editMode === active) return;
       editMode = active;
-      for (const actor of actors) {
-        actor.setEditMode(active);
-      }
       rebuildDirtyStaticCollider();
     },
     update(delta, elapsed) {
       rebuildDirtyStaticCollider();
       if (editMode) return;
-      for (const actor of actors) {
-        actor.update(delta, elapsed);
-        actor.collider.update(delta);
-      }
     },
     dispose() {
       staticCollider.dispose();
-      for (const actor of actors) {
-        actor.collider.dispose();
-        removeAndDispose(actor.group);
-      }
       removeAndDispose(level);
     },
   };

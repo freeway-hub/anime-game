@@ -84,6 +84,7 @@ export interface CharacterStatus {
   movingDir: THREE.Vector3;
   isOnGround: boolean;
   isOnMovingPlatform: boolean;
+  isAttacking: boolean;
   animationStatus: CharacterAnimationStatus;
 }
 

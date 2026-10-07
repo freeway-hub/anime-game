@@ -1,8 +1,8 @@
-# VRM Game Starter
+# Anime Game
 
 **[English](README.md) | 日本語**
 
-![VRM Game Starter スクリーンショット](screenshot.png)
+![Anime Game スクリーンショット](screenshot.png)
 
 [VRM](https://vrm.dev/)アバターと[Three.js](https://threejs.org/)（WebGPU）で3Dゲームを作り始めるためのスターターテンプレートです。cloneしてコマンドを1つ実行するだけで、キャラクターが歩き回れるレベルが動きます。そこから自分のゲームに育ててください。
 

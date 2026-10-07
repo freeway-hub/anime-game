@@ -35,6 +35,13 @@ interface AOParameterControls {
 
 interface InspectorWithParameters extends Inspector {
   parameters: Tab;
+  profiler: {
+    panel: HTMLElement;
+    miniPanel: HTMLElement;
+    togglePanel(): void;
+    show(tab: Tab): void;
+    hide(): void;
+  };
 }
 
 interface RendererInspectorSlot {
@@ -120,9 +127,43 @@ export function createInspector({
   createShadowParameters(inspector, shadowControls, characterShadowControls);
 
   inspector.setActiveTab(inspector.parameters);
+  inspector.profiler.hide();
+  if (inspector.profiler.panel.classList.contains("visible")) {
+    inspector.profiler.togglePanel();
+  }
+
+  const syncControlOverlay = () => {
+    const panelVisible = inspector.profiler.panel.classList.contains("visible");
+    const miniPanelVisible = inspector.profiler.miniPanel.classList.contains("visible");
+    document.body.classList.toggle("inspector-panel-open", panelVisible || miniPanelVisible);
+  };
+  syncControlOverlay();
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.repeat) return;
+    if (event.code === "Insert") {
+      event.preventDefault();
+      inspector.profiler.togglePanel();
+      syncControlOverlay();
+      return;
+    }
+    if (event.code === "F2") {
+      event.preventDefault();
+      const miniPanelVisible = inspector.profiler.miniPanel.classList.contains("visible");
+      if (miniPanelVisible) {
+        inspector.profiler.hide();
+      } else {
+        inspector.profiler.show(inspector.parameters);
+      }
+      syncControlOverlay();
+    }
+  };
+  window.addEventListener("keydown", onKeyDown);
 
   return {
     dispose() {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.classList.remove("inspector-panel-open");
       if (renderer.inspector === inspector) {
         (renderer as unknown as RendererInspectorSlot)._inspector = null;
       }
@@ -175,8 +216,6 @@ function createCameraParameters(
   controls: CameraInspectorControls
 ) {
   const group = inspector.createParameters("Camera");
-  group.add(controls, "firstPerson").name("First Person");
-  group.add(controls, "lockPointer").name("Lock Pointer");
   group.add(controls, "collisionEnabled").name("Collision");
   group.add(controls, "collisionPadding", 0, 1, 0.01).name("Collision Padding");
   group.add(controls, "minDistance", 0.02, 4, 0.01).name("Min Distance");

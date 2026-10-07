@@ -1,8 +1,8 @@
-# VRM Game Starter
+# Anime Game
 
 **English | [日本語](README.ja.md)**
 
-![VRM Game Starter screenshot](screenshot.png)
+![Anime Game screenshot](screenshot.png)
 
 A beginner-friendly starter template for building 3D games with [VRM](https://vrm.dev/en/) avatars and [Three.js](https://threejs.org/) (WebGPU). Clone it, run one command, and you have a walkable character on a playable level — then make it your own.
 

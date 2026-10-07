@@ -83,6 +83,15 @@ export function handleCharacterMovement(
   runState: boolean,
   delta: number
 ) {
+  if (characterStatus.isAttacking && state.isOnGround) {
+    state.inputDir.set(0, 0, 0);
+    state.currentLinVelOnPlane.copy(state.currentLinVel).projectOnPlane(state.upAxis);
+    state.currentLinVelOnPlane.multiplyScalar(0);
+    state.currentLinVel.x = 0;
+    state.currentLinVel.z = 0;
+    return;
+  }
+
   const friction = THREE.MathUtils.clamp(state.groundFriction, 0, 1);
   const {
     acceleration,

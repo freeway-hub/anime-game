@@ -10,6 +10,8 @@ const vrmDropOverlay = document.querySelector<HTMLElement>("[data-vrm-drop-overl
 if (!canvas) throw new Error("Missing #scene canvas.");
 
 const app = createApp({ canvas, statusElement, vrmDropOverlay });
+const onContextMenu = (event: MouseEvent) => event.preventDefault();
+document.addEventListener("contextmenu", onContextMenu);
 app.start();
 
 const hot = (
@@ -18,6 +20,7 @@ const hot = (
   }
 ).hot;
 hot?.dispose(() => {
+  document.removeEventListener("contextmenu", onContextMenu);
   app.dispose();
   uninstallConsoleWarningFilter();
 });

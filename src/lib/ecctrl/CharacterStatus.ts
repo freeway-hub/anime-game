@@ -9,5 +9,6 @@ export const characterStatus: CharacterStatus = {
   movingDir: new THREE.Vector3(),
   isOnGround: false,
   isOnMovingPlatform: false,
+  isAttacking: false,
   animationStatus: "IDLE",
 };

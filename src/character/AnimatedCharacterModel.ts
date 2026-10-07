@@ -14,6 +14,7 @@ import {
 } from "./ActionContract";
 import {
   punchActionName,
+  punchActionNames,
   requiredAnimationClipNames,
   statusToActionMap,
 } from "./AnimationContract";
@@ -29,6 +30,7 @@ import { waitForNextFrame } from "../utils/FrameYield";
 import {
   useAnimationStore,
   useButtonStore,
+  characterStatus,
   type CharacterAnimationStatus,
 } from "../lib/ecctrl/index";
 
@@ -45,7 +47,7 @@ let animationLibraryPromise: ReturnType<typeof loadAnimationLibraryGltf> | null 
 const oneShotActions: ReadonlySet<string> = new Set([
   statusToActionMap.JUMP_START,
   statusToActionMap.JUMP_LAND,
-  punchActionName,
+  ...punchActionNames,
 ]);
 
 export class AnimatedCharacterModel {
@@ -59,6 +61,7 @@ export class AnimatedCharacterModel {
   private readonly unsubscribe: () => void;
   private previousActionName: string = getActionName("IDLE");
   private nextPunchTime = 0;
+  private nextPunchIndex = 0;
   private canPlayNext = true;
   private disposed = false;
 
@@ -238,23 +241,32 @@ export class AnimatedCharacterModel {
   }
 
   private playPunch() {
-    const currentTime = this.mixer.time;
-    const punchPlaying =
-      this.previousActionName === punchActionName && !this.canPlayNext;
-    if (
-      !shouldStartPunchAction(currentTime, this.nextPunchTime, punchPlaying)
-    ) {
-      return;
-    }
-    this.nextPunchTime = currentTime + punchMinIntervalSeconds;
+    if (!characterStatus.isOnGround) return;
 
+    const currentTime = this.mixer.time;
+    const punchPlaying = isPunchActionName(this.previousActionName) && !this.canPlayNext;
+    if (!shouldStartPunchAction(currentTime, this.nextPunchTime, punchPlaying)) return;
+
+    this.nextPunchTime = currentTime + punchMinIntervalSeconds;
+    this.setAttackState(true);
+
+    const punchName = punchActionNames[this.nextPunchIndex];
     const previousActionName = this.previousActionName;
-    const crossFadeFrom =
-      previousActionName === punchActionName
-        ? getActionName(useAnimationStore.getState().animationStatus)
-        : previousActionName;
-    this.playAction(punchActionName, crossFadeFrom);
-    this.previousActionName = punchActionName;
+    const crossFadeFrom = isPunchActionName(previousActionName)
+      ? getActionName(useAnimationStore.getState().animationStatus)
+      : previousActionName;
+
+    this.playAction(punchName, crossFadeFrom);
+    this.previousActionName = punchName;
+    this.nextPunchIndex = (this.nextPunchIndex + 1) % punchActionNames.length;
+  }
+
+  private setAttackState(attacking: boolean) {
+    characterStatus.isAttacking = attacking;
+    if (attacking && characterStatus.isOnGround) {
+      characterStatus.linvel.x = 0;
+      characterStatus.linvel.z = 0;
+    }
   }
 
   private readonly handleFinished = (event: { action: THREE.AnimationAction }) => {
@@ -265,6 +277,7 @@ export class AnimatedCharacterModel {
       oneShotActions.has(actionName)
     ) {
       this.allowNextAction();
+      if (isPunchActionName(actionName)) this.setAttackState(false);
     }
   };
 
@@ -280,6 +293,10 @@ export class AnimatedCharacterModel {
       }
     }
   }
+}
+
+function isPunchActionName(actionName: string) {
+  return punchActionNames.includes(actionName as (typeof punchActionNames)[number]);
 }
 
 function getActionName(status: CharacterAnimationStatus) {

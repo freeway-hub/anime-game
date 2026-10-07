@@ -77,8 +77,6 @@ export interface CameraInspectorControls {
   maxDistance: number;
   minPitch: number;
   maxPitch: number;
-  firstPerson(): void;
-  lockPointer(): void;
 }
 
 export interface CameraRig {
@@ -121,6 +119,9 @@ export function createCameraRig(
 
   const onPointerDown = (event: PointerEvent) => {
     if (!state.inputEnabled || !state.pointerInputEnabled) return;
+    if (document.pointerLockElement !== canvas) {
+      void canvas.requestPointerLock();
+    }
     state.dragging = true;
     state.pointerId = event.pointerId;
     state.pointerX = event.clientX;
@@ -176,7 +177,7 @@ export function createCameraRig(
   canvas.addEventListener("wheel", onWheel, { passive: true });
   document.addEventListener("mousemove", onLockedMouseMove);
 
-  const controls = createCameraControls(state, canvas);
+  const controls = createCameraControls(state);
   return {
     controls,
     resize(width, height) {
@@ -351,8 +352,7 @@ function releasePointerCapture(
 }
 
 function createCameraControls(
-  state: CameraRigState,
-  canvas: HTMLCanvasElement
+  state: CameraRigState
 ): CameraInspectorControls {
   return {
     get collisionEnabled() {
@@ -400,12 +400,6 @@ function createCameraControls(
         state.settings.minPitch
       );
       state.pitch = clampCameraPitch(state, state.pitch);
-    },
-    firstPerson() {
-      state.distance = state.settings.minDistance;
-    },
-    lockPointer() {
-      void canvas.requestPointerLock();
     },
   };
 }

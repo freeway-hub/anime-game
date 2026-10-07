@@ -1,6 +1,7 @@
 import type { CharacterAnimationStatus } from "../lib/ecctrl/index";
 
-export const punchActionName = "Punch_Jab";
+export const punchActionNames = ["Punch_Jab", "Punch_Cross"] as const;
+export const punchActionName = punchActionNames[0];
 
 export const statusToActionMap = {
   IDLE: "Idle_Loop",
@@ -13,5 +14,5 @@ export const statusToActionMap = {
 } as const satisfies Record<CharacterAnimationStatus, string>;
 
 export const requiredAnimationClipNames = Array.from(
-  new Set([...Object.values(statusToActionMap), punchActionName])
+  new Set([...Object.values(statusToActionMap), ...punchActionNames])
 );
