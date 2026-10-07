@@ -5,7 +5,7 @@ import type BVHEcctrl from "../lib/ecctrl/BVHEcctrl";
 
 const MAGNET_START_PROGRESS = 0.05;
 const MAGNET_END_PROGRESS = 0.76;
-const MAGNET_STOP_DISTANCE = 0.82;
+const MAGNET_STOP_DISTANCE = 0.68;
 const MAGNET_START_DISTANCE = 3.0;
 const MAGNET_FULL_PULL_DISTANCE = 2.2;
 const MAGNET_MAX_SPEED = 12.0;
