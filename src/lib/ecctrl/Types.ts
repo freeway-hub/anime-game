@@ -62,6 +62,7 @@ export type MovementInput = {
   backward?: boolean;
   leftward?: boolean;
   rightward?: boolean;
+  direction?: { x: number; y: number; z: number };
   joystick?: { x: number; y: number };
   run?: boolean;
   jump?: boolean;
@@ -85,6 +86,8 @@ export interface CharacterStatus {
   isOnGround: boolean;
   isOnMovingPlatform: boolean;
   isAttacking: boolean;
+  isTargetLocked: boolean;
+  targetLockInput: THREE.Vector3;
   animationStatus: CharacterAnimationStatus;
 }
 

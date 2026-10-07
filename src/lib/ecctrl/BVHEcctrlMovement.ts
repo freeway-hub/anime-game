@@ -1,6 +1,4 @@
 import * as THREE from "three";
-import { characterStatus } from "./CharacterStatus";
-import { useAnimationStore } from "./stores/AnimationStore";
 import type { BVHEcctrlState } from "./BVHEcctrlState";
 import type { CharacterAnimationStatus, MovementInput } from "./Types";
 
@@ -46,10 +44,16 @@ export function setInputDirection(
     backward?: boolean;
     leftward?: boolean;
     rightward?: boolean;
+    direction?: THREE.Vector3;
     joystick?: THREE.Vector2;
   }
 ) {
   state.inputDir.set(0, 0, 0);
+  if (dir.direction) {
+    state.inputDir.set(dir.direction.x, dir.direction.y, dir.direction.z);
+    if (state.inputDir.lengthSq() > 0) state.inputDir.normalize();
+    return;
+  }
   const joystickActive = !!dir.joystick && dir.joystick.lengthSq() > 0;
   if (
     !joystickActive &&
@@ -83,7 +87,7 @@ export function handleCharacterMovement(
   runState: boolean,
   delta: number
 ) {
-  if (characterStatus.isAttacking && state.isOnGround) {
+  if (state.characterStatus.isAttacking && state.isOnGround) {
     state.inputDir.set(0, 0, 0);
     state.currentLinVelOnPlane.copy(state.currentLinVel).projectOnPlane(state.upAxis);
     state.currentLinVelOnPlane.multiplyScalar(0);
@@ -223,6 +227,7 @@ export function updateCharacterStatus(
   run: boolean,
   jump: boolean
 ) {
+  const characterStatus = state.characterStatus;
   state.model.getWorldPosition(characterStatus.position);
   state.model.getWorldQuaternion(characterStatus.quaternion);
   characterStatus.linvel.copy(state.currentLinVel);
@@ -231,8 +236,13 @@ export function updateCharacterStatus(
   characterStatus.isOnGround = state.isOnGround;
   characterStatus.isOnMovingPlatform = state.isOnMovingPlatform;
   characterStatus.animationStatus = updateCharacterAnimation(state, run, jump);
-  if (state.prevAnimation !== characterStatus.animationStatus) {
-    useAnimationStore.getState().setAnimationStatus(characterStatus.animationStatus);
+  if (
+    state.prevAnimation !== characterStatus.animationStatus ||
+    characterStatus.isTargetLocked
+  ) {
+    state.characterStores.animationStore
+      .getState()
+      .setAnimationStatus(characterStatus.animationStatus);
     state.prevAnimation = characterStatus.animationStatus;
   }
 }

@@ -14,6 +14,8 @@ import { createHud } from "./Hud";
 import { createInspector } from "./Inspector";
 import { createLevel } from "./Level";
 import { createLevelEditor } from "./LevelEditor";
+import { DummyNpc } from "../npc/DummyNpc";
+import { createTargetLock } from "../combat/TargetLock";
 
 const IDLE_MOVEMENT_INPUT: MovementInput = {
   forward: false,
@@ -65,6 +67,8 @@ export function createApp({
   const characterRuntime = createCharacterModelRuntime(controllerRig.controller, {
     warmUp: warmUpCharacterModel,
   });
+  const dummyNpc = new DummyNpc(camera, scene);
+  const targetLock = createTargetLock(controllerRig.controller, camera, scene, [dummyNpc]);
   let sampleVrmIndex = 0;
   const characterFileControls = {
     loadVrmFile: () => {
@@ -125,6 +129,8 @@ export function createApp({
     level.update(delta, simulationElapsed);
     updateController(delta, simulationElapsed, levelEditing);
     characterRuntime.update(delta, simulationElapsed);
+    dummyNpc?.update(delta, simulationElapsed);
+    cameraRig.setTargetLockTarget(targetLock.target ? targetLock.target.group : null);
     cameraRig.update(delta);
     skyRig.update();
     renderGraph.render();
@@ -153,6 +159,8 @@ export function createApp({
     levelEditor.dispose();
     level.dispose();
     characterRuntime.dispose();
+    dummyNpc.dispose();
+    targetLock.dispose();
     controllerRig.dispose();
     cameraRig.dispose();
     renderGraph.dispose();
@@ -221,7 +229,7 @@ export function createApp({
       controller.setMovement(IDLE_MOVEMENT_INPUT);
       return;
     }
-    controller.setMovement(controllerRig.movementInput);
+    controller.setMovement(targetLock.update(controllerRig.movementInput));
     controller.update(delta, elapsed);
     if (controller.group.position.y < -8) {
       controllerRig.resetPlayer();

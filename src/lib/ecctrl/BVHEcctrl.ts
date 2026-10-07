@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * BVHEcctrl
  * https://github.com/pmndrs/BVHEcctrl
  * (c) 2025 @ErdongChen-Andrew
@@ -26,9 +26,8 @@ import {
   updateCharacterWithPlatform,
   updateSegmentBBox,
 } from "./BVHEcctrlMovement";
-import { characterStatus } from "./CharacterStatus";
+import type { CharacterStores } from "./stores/ActorStores";
 import { addChildren, applyObject3DOptions } from "./Object3DUtils";
-import { useButtonStore } from "./stores/ButtonStore";
 import { useEcctrlStore } from "./stores/EcctrlStore";
 import { useJoystickStore } from "./stores/JoystickStore";
 import type {
@@ -44,9 +43,9 @@ export default class BVHEcctrl implements BVHEcctrlApi {
   private readonly unsubscribeJoystick: () => void;
   private walkAirDragFactorLinked: boolean;
 
-  constructor(options: EcctrlOptions) {
+  constructor(options: EcctrlOptions, characterStores?: CharacterStores) {
     this.walkAirDragFactorLinked = options.walkAirDragFactor === undefined;
-    this.state = new BVHEcctrlState(resolveEcctrlOptions(options));
+    this.state = new BVHEcctrlState(resolveEcctrlOptions(options), characterStores);
     applyObject3DOptions(this.state.group, options);
     addChildren(this.state.model, options.children);
     this.unsubscribeJoystick = useJoystickStore.subscribe((joystickState) => {
@@ -64,6 +63,14 @@ export default class BVHEcctrl implements BVHEcctrlApi {
 
   get model() {
     return this.state.model;
+  }
+
+  get characterStatus() {
+    return this.state.characterStatus;
+  }
+
+  get characterStores() {
+    return this.state.characterStores;
   }
 
   resetLinVel() {
@@ -111,13 +118,13 @@ export default class BVHEcctrl implements BVHEcctrlApi {
 
     const deltaTime =
       Math.min(1 / 45, delta) * this.state.options.slowMotionFactor;
-    const { buttons } = useButtonStore.getState();
+    const { buttons } = this.state.characterStores.buttonStore.getState();
     const forward = this.state.forwardState;
     const backward = this.state.backwardState;
     const leftward = this.state.leftwardState;
     const rightward = this.state.rightwardState;
     const run = this.state.runState || buttons.run;
-    const jump = !characterStatus.isAttacking &&
+    const jump = !this.state.characterStatus.isAttacking &&
       (this.state.jumpState || buttons.jump);
 
     setInputDirection(this.state, {
@@ -164,6 +171,5 @@ export default class BVHEcctrl implements BVHEcctrlApi {
   }
 }
 
-export { characterStatus };
 export type EcctrlProps = EcctrlOptions;
 export type { BVHEcctrlApi, CharacterStatus };

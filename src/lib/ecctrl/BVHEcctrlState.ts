@@ -1,9 +1,12 @@
 import * as THREE from "three";
-import type { CharacterAnimationStatus, ResolvedEcctrlOptions } from "./Types";
+import type { CharacterAnimationStatus, CharacterStatus, ResolvedEcctrlOptions } from "./Types";
+import { playerCharacterStores, type CharacterStores } from "./stores/ActorStores";
 
 export class BVHEcctrlState {
   readonly group = new THREE.Group();
   readonly model = new THREE.Group();
+  readonly characterStatus: CharacterStatus;
+  readonly characterStores: CharacterStores;
   options: ResolvedEcctrlOptions;
 
   capsuleRadius: number;
@@ -104,8 +107,10 @@ export class BVHEcctrlState {
   readonly deltaHit = new THREE.Vector3();
   debugObjects: ControllerDebugObjects | null = null;
 
-  constructor(options: ResolvedEcctrlOptions) {
+  constructor(options: ResolvedEcctrlOptions, characterStores: CharacterStores = playerCharacterStores) {
     this.options = options;
+    this.characterStores = characterStores;
+    this.characterStatus = characterStores.status;
     this.model.name = "BVHEcctrl-Model";
     this.group.add(this.model);
     this.capsuleRadius = options.colliderCapsuleArgs[0];

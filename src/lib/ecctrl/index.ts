@@ -8,7 +8,7 @@
 import BVHEcctrl from "./BVHEcctrl";
 export default BVHEcctrl;
 
-export { characterStatus } from "./BVHEcctrl";
+export { characterStatus } from "./CharacterStatus";
 export type { BVHEcctrlApi } from "./BVHEcctrl";
 export type { EcctrlProps } from "./BVHEcctrl";
 export type { CharacterStatus } from "./BVHEcctrl";

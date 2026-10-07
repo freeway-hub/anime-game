@@ -1,4 +1,4 @@
-import * as THREE from "three";
+﻿import * as THREE from "three";
 import {
   MToonMaterialLoaderPlugin,
   VRMLoaderPlugin,
@@ -28,11 +28,9 @@ import { getVrmMetaVersion, isVrm0 } from "./VrmMeta";
 import { enableCharacterAoMaskLayer } from "../scene/RenderLayers";
 import { waitForNextFrame } from "../utils/FrameYield";
 import {
-  useAnimationStore,
-  useButtonStore,
-  characterStatus,
   type CharacterAnimationStatus,
 } from "../lib/ecctrl/index";
+import { playerCharacterStores, type CharacterStores } from "../lib/ecctrl/stores/ActorStores";
 
 const animationLibraryUrl = new URL(
   "../assets/AnimationLibrary.glb",
@@ -58,6 +56,7 @@ export class AnimatedCharacterModel {
   private readonly mixer: THREE.AnimationMixer;
   private readonly footIK: CharacterFootIK;
   private readonly actions = new Map<string, THREE.AnimationAction>();
+  private readonly characterStores: CharacterStores;
   private readonly unsubscribe: () => void;
   private previousActionName: string = getActionName("IDLE");
   private nextPunchTime = 0;
@@ -68,11 +67,13 @@ export class AnimatedCharacterModel {
   constructor(
     vrm: VRM,
     animationGltf: Awaited<ReturnType<GLTFLoader["loadAsync"]>>,
-    sourceName: string
+    sourceName: string,
+    characterStores: CharacterStores = playerCharacterStores
   ) {
     this.vrm = vrm;
     this.sourceName = sourceName;
     this.vrmVersionLabel = getVrmVersionLabel(vrm);
+    this.characterStores = characterStores;
     this.group.name = "AnimatedCharacterModel";
     this.group.position.set(0, -1.1, 0);
     this.group.add(vrm.scene);
@@ -92,25 +93,29 @@ export class AnimatedCharacterModel {
       this.actions.set(clip.name, this.mixer.clipAction(clip));
     }
     this.assertRequiredActions();
-    this.footIK = new CharacterFootIK(vrm, this.group);
+    this.footIK = new CharacterFootIK(vrm, this.group, this.characterStores.status);
     this.unsubscribe = this.bindAnimationState();
   }
 
-  static async load() {
+  static async load(characterStores: CharacterStores = playerCharacterStores) {
     const [defaultVrm] = sampleVrms;
-    return AnimatedCharacterModel.loadFromUrl(defaultVrm.url, defaultVrm.name);
+    return AnimatedCharacterModel.loadFromUrl(defaultVrm.url, defaultVrm.name, characterStores);
   }
 
-  static async loadFromFile(file: File) {
+  static async loadFromFile(file: File, characterStores: CharacterStores = playerCharacterStores) {
     const url = URL.createObjectURL(file);
     try {
-      return await AnimatedCharacterModel.loadFromUrl(url, file.name);
+      return await AnimatedCharacterModel.loadFromUrl(url, file.name, characterStores);
     } finally {
       URL.revokeObjectURL(url);
     }
   }
 
-  static async loadFromUrl(url: string, sourceName: string) {
+  static async loadFromUrl(
+    url: string,
+    sourceName: string,
+    characterStores: CharacterStores = playerCharacterStores
+  ) {
     let vrm: VRM | null = null;
     try {
       const [vrmResult, animationResult] = await Promise.allSettled([
@@ -123,7 +128,8 @@ export class AnimatedCharacterModel {
       const model = new AnimatedCharacterModel(
         vrmResult.value,
         animationResult.value,
-        sourceName
+        sourceName,
+        characterStores
       );
       vrm = null;
       return model;
@@ -170,16 +176,16 @@ export class AnimatedCharacterModel {
 
   private bindAnimationState() {
     this.mixer.addEventListener("finished", this.handleFinished);
-    const unsubscribeAnimation = useAnimationStore.subscribe((state) => {
+    const unsubscribeAnimation = this.characterStores.animationStore.subscribe((state) => {
       this.playStatus(state.animationStatus);
     });
-    const unsubscribeButtons = useButtonStore.subscribe((state, previousState) => {
+    const unsubscribeButtons = this.characterStores.buttonStore.subscribe((state, previousState) => {
       if (state.buttons[punchButtonId] && !previousState.buttons[punchButtonId]) {
         this.playPunch();
       }
     });
     this.playInitialIdle();
-    this.playStatus(useAnimationStore.getState().animationStatus);
+    this.playStatus(this.characterStores.animationStore.getState().animationStatus);
     return () => {
       unsubscribeAnimation();
       unsubscribeButtons();
@@ -241,7 +247,7 @@ export class AnimatedCharacterModel {
   }
 
   private playPunch() {
-    if (!characterStatus.isOnGround) return;
+    if (!this.characterStores.status.isOnGround) return;
 
     const currentTime = this.mixer.time;
     const punchPlaying = isPunchActionName(this.previousActionName) && !this.canPlayNext;
@@ -253,7 +259,7 @@ export class AnimatedCharacterModel {
     const punchName = punchActionNames[this.nextPunchIndex];
     const previousActionName = this.previousActionName;
     const crossFadeFrom = isPunchActionName(previousActionName)
-      ? getActionName(useAnimationStore.getState().animationStatus)
+      ? getActionName(this.characterStores.animationStore.getState().animationStatus)
       : previousActionName;
 
     this.playAction(punchName, crossFadeFrom);
@@ -262,10 +268,10 @@ export class AnimatedCharacterModel {
   }
 
   private setAttackState(attacking: boolean) {
-    characterStatus.isAttacking = attacking;
-    if (attacking && characterStatus.isOnGround) {
-      characterStatus.linvel.x = 0;
-      characterStatus.linvel.z = 0;
+    this.characterStores.status.isAttacking = attacking;
+    if (attacking && this.characterStores.status.isOnGround) {
+      this.characterStores.status.linvel.x = 0;
+      this.characterStores.status.linvel.z = 0;
     }
   }
 
@@ -283,7 +289,7 @@ export class AnimatedCharacterModel {
 
   private allowNextAction() {
     this.canPlayNext = true;
-    this.playStatus(useAnimationStore.getState().animationStatus);
+    this.playStatus(this.characterStores.animationStore.getState().animationStatus);
   }
 
   private assertRequiredActions() {

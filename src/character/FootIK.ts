@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { VRM } from "@pixiv/three-vrm";
-import { characterStatus, useEcctrlStore } from "../lib/ecctrl/index";
+import { useEcctrlStore } from "../lib/ecctrl/index";
+import type { CharacterStatus } from "../lib/ecctrl/Types";
 
 export interface FootIKSettings {
   enabled: boolean;
@@ -99,9 +100,11 @@ export class CharacterFootIK {
   };
   private restFootHeight = 0;
   private weight = 0;
+  private readonly characterStatus: CharacterStatus;
 
-  constructor(vrm: VRM, modelRoot: THREE.Object3D) {
+  constructor(vrm: VRM, modelRoot: THREE.Object3D, characterStatus: CharacterStatus) {
     this.vrm = vrm;
+    this.characterStatus = characterStatus;
     this.modelRoot = modelRoot;
     this.hips = vrm.humanoid.getRawBoneNode("hips");
     for (const names of LEG_BONES) {
@@ -126,7 +129,7 @@ export class CharacterFootIK {
   update(delta: number) {
     if (!this.hips || this.legs.length !== LEG_BONES.length) return;
 
-    const active = footIKSettings.enabled && characterStatus.isOnGround;
+    const active = footIKSettings.enabled && this.characterStatus.isOnGround;
     const targetWeight = active ? 1 : 0;
     this.weight = THREE.MathUtils.damp(
       this.weight,

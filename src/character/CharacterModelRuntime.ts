@@ -1,6 +1,7 @@
 import type * as THREE from "three";
 import { scheduleAfterNextFrame, waitForNextFrame } from "../utils/FrameYield";
 import { AnimatedCharacterModel } from "./AnimatedCharacterModel";
+import { playerCharacterStores, type CharacterStores } from "../lib/ecctrl/stores/ActorStores";
 import {
   DEFAULT_CHARACTER_SHADOW_SETTINGS,
   type CharacterShadowInspectorControls,
@@ -14,6 +15,7 @@ interface CharacterHost {
 
 interface CharacterModelRuntimeOptions {
   warmUp?(model: AnimatedCharacterModel): Promise<void>;
+  characterStores?: CharacterStores;
 }
 
 export function createCharacterModelRuntime(
@@ -29,6 +31,7 @@ export function createCharacterModelRuntime(
   let elapsedTime = 0;
   let noticeMessage: string | null = null;
   let noticeMessageUntil = 0;
+  const characterStores = options.characterStores ?? playerCharacterStores;
   const shadowSettings: CharacterShadowSettings = {
     ...DEFAULT_CHARACTER_SHADOW_SETTINGS,
   };
@@ -142,17 +145,17 @@ export function createCharacterModelRuntime(
   return {
     shadowControls,
     loadDefault() {
-      void load(() => AnimatedCharacterModel.load(), "LOADING CHARACTER");
+      void load(() => AnimatedCharacterModel.load(characterStores), "LOADING CHARACTER");
     },
     loadFile(file: File) {
       void load(
-        () => AnimatedCharacterModel.loadFromFile(file),
+        () => AnimatedCharacterModel.loadFromFile(file, characterStores),
         `LOADING ${shortenName(file.name)}`
       );
     },
     loadUrl(url: string, name: string) {
       void load(
-        () => AnimatedCharacterModel.loadFromUrl(url, name),
+        () => AnimatedCharacterModel.loadFromUrl(url, name, characterStores),
         `LOADING ${shortenName(name)}`
       );
     },

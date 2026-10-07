@@ -63,6 +63,7 @@ interface CameraRigState {
   distance: number;
   followY: number | null;
   freePosition: THREE.Vector3;
+  targetLockTarget: THREE.Object3D | null;
   dragging: boolean;
   pointerId: number;
   pointerX: number;
@@ -85,6 +86,7 @@ export interface CameraRig {
   setEditMode(enabled: boolean): void;
   setInputEnabled(enabled: boolean): void;
   setPointerInputEnabled(enabled: boolean): void;
+  setTargetLockTarget(target: THREE.Object3D | null): void;
   update(delta: number): void;
   dispose(): void;
 }
@@ -103,6 +105,7 @@ export function createCameraRig(
     distance: 3.5,
     followY: null,
     freePosition: new THREE.Vector3(),
+    targetLockTarget: null,
     dragging: false,
     pointerId: -1,
     pointerX: 0,
@@ -112,6 +115,8 @@ export function createCameraRig(
   const cameraTarget = new THREE.Vector3();
   const cameraOffset = new THREE.Vector3();
   const cameraDesiredPosition = new THREE.Vector3();
+  const cameraLookTarget = new THREE.Vector3();
+  const targetWorldPosition = new THREE.Vector3();
   const cameraCollisionPosition = new THREE.Vector3();
   const collisionScratch = createCameraCollisionScratch();
   const freeCameraInput = createFreeCameraKeyboardInput();
@@ -207,6 +212,9 @@ export function createCameraRig(
       state.pointerInputEnabled = enabled;
       if (!enabled) releasePointerCapture(state, canvas);
     },
+    setTargetLockTarget(target) {
+      state.targetLockTarget = target;
+    },
     update(delta) {
       updateGamepadCamera(state, delta);
       if (state.editMode) {
@@ -234,6 +242,13 @@ export function createCameraRig(
       cameraOffset.multiplyScalar(state.distance);
       cameraDesiredPosition.copy(cameraTarget).add(cameraOffset);
       camera.position.lerp(cameraDesiredPosition, 1 - Math.pow(0.001, delta));
+      cameraLookTarget.copy(cameraTarget);
+      if (state.targetLockTarget) {
+        targetWorldPosition.setFromMatrixPosition(
+          state.targetLockTarget.matrixWorld
+        );
+        cameraLookTarget.lerp(targetWorldPosition, 0.5);
+      }
       if (state.settings.collisionEnabled) {
         cameraCollisionPosition.copy(camera.position);
         applyCameraCollision(
@@ -245,7 +260,7 @@ export function createCameraRig(
         );
         camera.position.copy(cameraCollisionPosition);
       }
-      camera.lookAt(cameraTarget);
+      camera.lookAt(cameraLookTarget);
       target.model.visible =
         camera.position.distanceTo(cameraTarget) >
         state.settings.modelVisibleDistance;
