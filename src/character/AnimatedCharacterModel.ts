@@ -16,6 +16,7 @@ import {
   hitReactionActionNames,
   punchActionName,
   punchActionNames,
+  rollActionName,
   requiredAnimationClipNames,
   statusToActionMap,
 } from "./AnimationContract";
@@ -48,6 +49,7 @@ const oneShotActions: ReadonlySet<string> = new Set([
   statusToActionMap.JUMP_LAND,
   ...punchActionNames,
   ...hitReactionActionNames,
+  rollActionName,
 ]);
 
 export class AnimatedCharacterModel {
@@ -155,6 +157,13 @@ export class AnimatedCharacterModel {
     return Math.min(action.time / action.getClip().duration, 1);
   }
 
+  playRoll() {
+    if (!this.characterStores.status.isOnGround || !this.canPlayNext) return false;
+    this.playAction(rollActionName, this.previousActionName);
+    this.previousActionName = rollActionName;
+    return true;
+  }
+
   playHitReaction() {
     if (!this.characterStores.status.isOnGround) return false;
     const reactionName = hitReactionActionNames[this.nextHitReactionIndex];
@@ -258,7 +267,9 @@ export class AnimatedCharacterModel {
         nextActionName as (typeof hitReactionActionNames)[number]
       )
         ? 1
-        : 1.6;
+        : nextActionName === rollActionName
+          ? 1
+          : 1.6;
       nextAction.setLoop(THREE.LoopOnce, 1);
       nextAction.clampWhenFinished = true;
       if (previousAction) nextAction.crossFadeFrom(previousAction, 0.1, false);

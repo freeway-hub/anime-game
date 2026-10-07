@@ -20,6 +20,7 @@ import { createTargetLock } from "../combat/TargetLock";
 import { createHitSystem } from "../combat/HitSystem";
 import { createHitStop } from "../combat/HitStop";
 import { createAttackMagnetism } from "../combat/AttackMagnetism";
+import { createRoll } from "../movement/Roll";
 
 const IDLE_MOVEMENT_INPUT: MovementInput = {
   forward: false,
@@ -110,6 +111,11 @@ export function createApp({
     canvas,
     controllerRig.controller
   );
+  const roll = createRoll(
+    controllerRig.controller,
+    characterRuntime,
+    cameraRig
+  );
   const levelEditor = createLevelEditor({
     camera,
     canvas,
@@ -151,6 +157,7 @@ export function createApp({
       cameraShake.trigger();
     }
     cameraShake.update(delta);
+    roll.update(simulationDelta);
     attackMagnetism.update(simulationDelta);
     dummyNpc?.update(simulationDelta, simulationElapsed);
     cameraRig.setTargetLockTarget(targetLock.target ? targetLock.target.group : null);
@@ -186,6 +193,7 @@ export function createApp({
     hitSystem.dispose();
     cameraShake.reset();
     attackMagnetism.dispose();
+    roll.dispose();
     dummyNpc.dispose();
     targetLock.dispose();
     controllerRig.dispose();
@@ -244,6 +252,7 @@ export function createApp({
     inputLockedByLevelEditor = active;
     cameraRig.setEditMode(active);
     controllerRig.setInputEnabled(!active);
+    roll.setInputEnabled(!active);
     if (active) {
       controllerRig.controller.setMovement(IDLE_MOVEMENT_INPUT);
       controllerRig.controller.resetLinVel();
@@ -256,7 +265,9 @@ export function createApp({
       controller.setMovement(IDLE_MOVEMENT_INPUT);
       return;
     }
-    controller.setMovement(targetLock.update(controllerRig.movementInput));
+    controller.setMovement(
+      roll.active ? IDLE_MOVEMENT_INPUT : targetLock.update(controllerRig.movementInput)
+    );
     controller.update(delta, elapsed);
     if (controller.group.position.y < -8) {
       controllerRig.resetPlayer();

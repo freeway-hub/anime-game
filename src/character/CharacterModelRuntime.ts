@@ -159,6 +159,9 @@ export function createCharacterModelRuntime(
         `LOADING ${shortenName(name)}`
       );
     },
+    playRoll() {
+      return currentModel?.playRoll() ?? false;
+    },
     playHitReaction() {
       return currentModel?.playHitReaction() ?? false;
     },

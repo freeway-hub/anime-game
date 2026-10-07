@@ -88,6 +88,7 @@ export interface CameraRig {
   setInputEnabled(enabled: boolean): void;
   setPointerInputEnabled(enabled: boolean): void;
   setTargetLockTarget(target: THREE.Object3D | null): void;
+  getForwardDirection(target: THREE.Vector3): THREE.Vector3;
   update(delta: number): void;
   dispose(): void;
 }
@@ -222,6 +223,12 @@ export function createCameraRig(
         target.updateWorldMatrix(true, false);
         targetLockPosition.setFromMatrixPosition(target.matrixWorld);
       }
+    },
+    getForwardDirection(target) {
+      camera.getWorldDirection(target);
+      target.y = 0;
+      if (target.lengthSq() > 1e-5) target.normalize();
+      return target;
     },
     update(delta) {
       updateGamepadCamera(state, delta);

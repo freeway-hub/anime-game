@@ -8,9 +8,9 @@ const MAGNET_END_PROGRESS = 0.76;
 const MAGNET_STOP_DISTANCE = 0.52;
 const MAGNET_START_DISTANCE = 3.0;
 const MAGNET_FULL_PULL_DISTANCE = 2.2;
-const MAGNET_MAX_SPEED = 12.0;
-const MAGNET_RESPONSE = 38;
-const MAGNET_MAX_STEP = 0.26;
+const MAGNET_MAX_SPEED = 16.0;
+const MAGNET_RESPONSE = 52;
+const MAGNET_MAX_STEP = 0.34;
 
 type CharacterRuntime = ReturnType<typeof createCharacterModelRuntime>;
 
