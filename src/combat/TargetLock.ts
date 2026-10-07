@@ -1,6 +1,7 @@
 import * as THREE from "three/webgpu";
 import type { MovementInput } from "../lib/ecctrl/index";
 import type BVHEcctrl from "../lib/ecctrl/BVHEcctrl";
+import { createTargetIndicator } from "../ui/TargetIndicator";
 
 export interface TargetLockTarget {
   readonly group: THREE.Object3D;
@@ -33,15 +34,8 @@ export function createTargetLock(
   const up = new THREE.Vector3(0, 1, 0);
   const targetQuaternion = new THREE.Quaternion();
   const lookMatrix = new THREE.Matrix4();
-  const indicator = new THREE.Group();
-  const indicatorArrow = new THREE.Mesh(
-    new THREE.ConeGeometry(0.14, 0.32, 4),
-    new THREE.MeshBasicMaterial({ color: 0xffe45c })
-  );
-  indicatorArrow.rotation.x = Math.PI;
-  indicator.add(indicatorArrow);
-  indicator.visible = false;
-  scene.add(indicator);
+  const indicatorVisual = createTargetIndicator(scene);
+  const indicator = indicatorVisual.object;
 
   const selectNearestTarget = () => {
     const player = controller.group.position;
@@ -135,9 +129,7 @@ export function createTargetLock(
       disposed = true;
       window.removeEventListener("keydown", onKeyDown);
       setLocked(false);
-      indicator.removeFromParent();
-      indicatorArrow.geometry.dispose();
-      indicatorArrow.material.dispose();
+      indicatorVisual.dispose();
     },
   };
 }

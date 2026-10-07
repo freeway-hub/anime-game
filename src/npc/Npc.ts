@@ -7,6 +7,7 @@ import { createKnockback, type Knockback } from "../combat/Knockback";
 export class Npc {
   readonly controller: NpcController;
   readonly group: THREE.Group;
+  readonly name: string;
   private readonly runtime: ReturnType<typeof createCharacterModelRuntime>;
   private readonly knockback: Knockback;
 
@@ -19,6 +20,7 @@ export class Npc {
   ) {
     this.controller = createNpcController(camera, scene);
     this.group = this.controller.controller.group;
+    this.name = sourceName.replace(/\\.vrm$/i, "").replace(/[-_]+/g, " ").trim() || "NPC";
     this.group.position.copy(position);
     this.runtime = createCharacterModelRuntime(this.controller.controller, {
       characterStores: this.controller.characterStores,

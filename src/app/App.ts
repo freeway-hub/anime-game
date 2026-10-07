@@ -21,6 +21,7 @@ import { createHitSystem } from "../combat/HitSystem";
 import { createHitStop } from "../combat/HitStop";
 import { createAttackMagnetism } from "../combat/AttackMagnetism";
 import { createRoll } from "../movement/Roll";
+import { createNpcVoiceInteraction } from "../ai/NpcVoiceInteraction";
 
 const IDLE_MOVEMENT_INPUT: MovementInput = {
   forward: false,
@@ -74,6 +75,12 @@ export function createApp({
   });
   const dummyNpc = new DummyNpc(camera, scene);
   const targetLock = createTargetLock(controllerRig.controller, camera, scene, [dummyNpc]);
+  const npcVoiceInteraction = createNpcVoiceInteraction(
+    scene,
+    controllerRig.controller.group,
+    [dummyNpc],
+    () => targetLock.target !== null
+  );
   const hitSystem = createHitSystem(
     characterRuntime,
     targetLock,
@@ -160,6 +167,7 @@ export function createApp({
     roll.update(simulationDelta);
     attackMagnetism.update(simulationDelta);
     dummyNpc?.update(simulationDelta, simulationElapsed);
+    npcVoiceInteraction.update();
     cameraRig.setTargetLockTarget(targetLock.target ? targetLock.target.group : null);
     cameraRig.update(delta);
     cameraShake.apply(camera);
@@ -194,6 +202,7 @@ export function createApp({
     cameraShake.reset();
     attackMagnetism.dispose();
     roll.dispose();
+    npcVoiceInteraction.dispose();
     dummyNpc.dispose();
     targetLock.dispose();
     controllerRig.dispose();
@@ -253,6 +262,7 @@ export function createApp({
     cameraRig.setEditMode(active);
     controllerRig.setInputEnabled(!active);
     roll.setInputEnabled(!active);
+    npcVoiceInteraction.setInputEnabled(!active);
     if (active) {
       controllerRig.controller.setMovement(IDLE_MOVEMENT_INPUT);
       controllerRig.controller.resetLinVel();
