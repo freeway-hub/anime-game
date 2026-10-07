@@ -14,6 +14,7 @@ import {
 } from "./ActionContract";
 import {
   hitReactionActionNames,
+  idleTalkingActionName,
   punchActionName,
   punchActionNames,
   rollActionName,
@@ -39,6 +40,11 @@ const animationLibraryUrl = new URL(
   "../assets/AnimationLibrary.glb",
   import.meta.url
 ).href;
+export const playerDefaultVrm = {
+  name: "Kai.vrm",
+  url: new URL("../assets/Kai.vrm", import.meta.url).href,
+} as const;
+
 export const sampleVrms = [
   { name: "sample.vrm", url: new URL("../assets/sample.vrm", import.meta.url).href },
   { name: "sample2.vrm", url: new URL("../assets/sample2.vrm", import.meta.url).href },
@@ -68,6 +74,7 @@ export class AnimatedCharacterModel {
   private nextPunchIndex = 0;
   private nextHitReactionIndex = 0;
   private canPlayNext = true;
+  private idleTalking = false;
   private disposed = false;
 
   constructor(
@@ -104,8 +111,11 @@ export class AnimatedCharacterModel {
   }
 
   static async load(characterStores: CharacterStores = playerCharacterStores) {
-    const [defaultVrm] = sampleVrms;
-    return AnimatedCharacterModel.loadFromUrl(defaultVrm.url, defaultVrm.name, characterStores);
+    return AnimatedCharacterModel.loadFromUrl(
+      playerDefaultVrm.url,
+      playerDefaultVrm.name,
+      characterStores
+    );
   }
 
   static async loadFromFile(file: File, characterStores: CharacterStores = playerCharacterStores) {
@@ -149,6 +159,30 @@ export class AnimatedCharacterModel {
     this.mixer.update(delta);
     this.vrm.update(delta);
     this.footIK.update(delta);
+  }
+
+  setIdleTalking(active: boolean) {
+    if (this.idleTalking === active) return;
+    this.idleTalking = active;
+    if (active) {
+      const previousActionName = this.previousActionName;
+      this.playAction(idleTalkingActionName, previousActionName);
+      this.previousActionName = idleTalkingActionName;
+      return;
+    }
+    this.canPlayNext = true;
+    this.playStatus(this.characterStores.animationStore.getState().animationStatus);
+  }
+
+  setMouthOpen(value: number) {
+    const expressionManager = this.vrm.expressionManager;
+    if (!expressionManager) return;
+    const amount = THREE.MathUtils.clamp(value, 0, 1);
+    try {
+      expressionManager.setValue("aa", amount);
+    } catch {
+      // Some VRM avatars do not expose the standard "aa" preset.
+    }
   }
 
   getPunchProgress() {
@@ -239,6 +273,7 @@ export class AnimatedCharacterModel {
   }
 
   private playStatus(status: CharacterAnimationStatus) {
+    if (this.idleTalking) return;
     const nextActionName = getActionName(status);
     const nextAction = this.actions.get(nextActionName);
     if (!nextAction) throw new Error(`Missing animation action: ${nextActionName}`);

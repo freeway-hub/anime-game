@@ -77,9 +77,13 @@ export function createApp({
   const targetLock = createTargetLock(controllerRig.controller, camera, scene, [dummyNpc]);
   const npcVoiceInteraction = createNpcVoiceInteraction(
     scene,
+    camera,
     controllerRig.controller.group,
     [dummyNpc],
-    () => targetLock.target !== null
+    () => targetLock.target !== null,
+    undefined,
+    undefined,
+    (value) => characterRuntime.setMouthOpen(value)
   );
   const hitSystem = createHitSystem(
     characterRuntime,

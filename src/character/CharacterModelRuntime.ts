@@ -171,6 +171,12 @@ export function createCharacterModelRuntime(
     getPunchProgress() {
       return currentModel?.getPunchProgress() ?? null;
     },
+    setMouthOpen(value: number) {
+      currentModel?.setMouthOpen(value);
+    },
+    setIdleTalking(active: boolean) {
+      currentModel?.setIdleTalking(active);
+    },
     showMessage(message: string, duration = 2) {
       setNoticeMessage(message, duration);
     },

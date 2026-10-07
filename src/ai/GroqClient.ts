@@ -10,12 +10,7 @@ export interface GroqConversationMessage {
 function debug(message: string, details?: unknown) {
   window.dispatchEvent(
     new CustomEvent("game-console-log", {
-      detail: {
-        level: "info",
-        source: "Groq",
-        message,
-        details,
-      },
+      detail: { level: "info", source: "Groq", message, details },
     })
   );
 }
@@ -64,14 +59,14 @@ export async function transcribeSpeech(audio: Blob) {
   const form = new FormData();
   form.append("file", audio, "npc-question.webm");
   form.append("model", "whisper-large-v3-turbo");
-  form.append("language", "en");
-  form.append("response_format", "json");
+  form.append("response_format", "verbose_json");
   form.append("temperature", "0");
   const response = await groqFetch("/audio/transcriptions", { method: "POST", body: form });
-  const data = (await response.json()) as { text?: string };
+  const data = (await response.json()) as { text?: string; language?: string };
   const text = data.text?.trim() ?? "";
-  debug("STT completed.", text || "<empty>");
-  return text;
+  const language = data.language?.trim().toLowerCase() || "en";
+  debug("STT completed.", { text: text || "<empty>", language });
+  return { text, language };
 }
 
 export async function generateNpcResponse(
@@ -98,14 +93,18 @@ export async function generateNpcResponse(
   return text;
 }
 
-export async function synthesizeSpeech(text: string) {
-  debug("TTS generation started.", text);
+export async function synthesizeSpeech(text: string, language: string) {
+  const normalized = language.trim().toLowerCase();
+  const isArabic = normalized === "arabic" || normalized === "ar";
+  const model = isArabic ? "canopylabs/orpheus-arabic-saudi" : "canopylabs/orpheus-v1-english";
+  const voice = isArabic ? "fahad" : "troy";
+  debug("TTS generation started.", { language, model, text });
   const response = await groqFetch("/audio/speech", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "canopylabs/orpheus-v1-english",
-      voice: "hannah",
+      model: isArabic ? "canopylabs/orpheus-arabic-saudi" : "canopylabs/orpheus-v1-english",
+      voice: isArabic ? "fahad" : "troy",
       input: text.slice(0, 200),
       response_format: "wav",
     }),

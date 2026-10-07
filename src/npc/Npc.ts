@@ -35,6 +35,14 @@ export class Npc {
     this.runtime.update(delta, elapsed);
   }
 
+  setMouthOpen(value: number) {
+    this.runtime.setMouthOpen(value);
+  }
+
+  setIdleTalking(active: boolean) {
+    this.runtime.setIdleTalking(active);
+  }
+
   receiveHit(sourcePosition: THREE.Vector3) {
     const hitConfirmed = this.runtime.playHitReaction();
     if (hitConfirmed) this.knockback.triggerFrom(sourcePosition);

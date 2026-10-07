@@ -4,6 +4,7 @@ export const punchActionNames = ["Punch_Jab", "Punch_Cross"] as const;
 export const punchActionName = punchActionNames[0];
 export const hitReactionActionNames = ["Hit_Chest", "Hit_Head"] as const;
 export const rollActionName = "Roll";
+export const idleTalkingActionName = "Idle_Talking";
 
 export const statusToActionMap = {
   IDLE: "Idle_Loop",
@@ -21,5 +22,6 @@ export const requiredAnimationClipNames = Array.from(
     ...punchActionNames,
     ...hitReactionActionNames,
     rollActionName,
+    idleTalkingActionName,
   ])
 );
