@@ -29,6 +29,10 @@ export class Npc {
     this.runtime.update(delta, elapsed);
   }
 
+  receiveHit() {
+    return this.runtime.playHitReaction();
+  }
+
   dispose() {
     this.runtime.dispose();
     this.controller.dispose();

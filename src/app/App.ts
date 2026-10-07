@@ -16,6 +16,9 @@ import { createLevel } from "./Level";
 import { createLevelEditor } from "./LevelEditor";
 import { DummyNpc } from "../npc/DummyNpc";
 import { createTargetLock } from "../combat/TargetLock";
+import { createHitSystem } from "../combat/HitSystem";
+import { createHitStop } from "../combat/HitStop";
+import { createAttackMagnetism } from "../combat/AttackMagnetism";
 
 const IDLE_MOVEMENT_INPUT: MovementInput = {
   forward: false,
@@ -69,6 +72,17 @@ export function createApp({
   });
   const dummyNpc = new DummyNpc(camera, scene);
   const targetLock = createTargetLock(controllerRig.controller, camera, scene, [dummyNpc]);
+  const hitSystem = createHitSystem(
+    characterRuntime,
+    targetLock,
+    controllerRig.controller.group.position
+  );
+  const hitStop = createHitStop();
+  const attackMagnetism = createAttackMagnetism(
+    controllerRig.controller,
+    characterRuntime,
+    targetLock
+  );
   let sampleVrmIndex = 0;
   const characterFileControls = {
     loadVrmFile: () => {
@@ -123,13 +137,16 @@ export function createApp({
 
   const render = () => {
     const delta = Math.min(clock.getDelta(), 1 / 30);
-    simulationElapsed += delta;
+    const simulationDelta = hitStop.update(delta);
+    simulationElapsed += simulationDelta;
     const levelEditing = levelEditor.isEditing();
     setLevelEditorInputLocked(levelEditing);
-    level.update(delta, simulationElapsed);
-    updateController(delta, simulationElapsed, levelEditing);
-    characterRuntime.update(delta, simulationElapsed);
-    dummyNpc?.update(delta, simulationElapsed);
+    level.update(simulationDelta, simulationElapsed);
+    updateController(simulationDelta, simulationElapsed, levelEditing);
+    characterRuntime.update(simulationDelta, simulationElapsed);
+    if (hitSystem.update()) hitStop.trigger();
+    attackMagnetism.update(simulationDelta);
+    dummyNpc?.update(simulationDelta, simulationElapsed);
     cameraRig.setTargetLockTarget(targetLock.target ? targetLock.target.group : null);
     cameraRig.update(delta);
     skyRig.update();
@@ -159,6 +176,8 @@ export function createApp({
     levelEditor.dispose();
     level.dispose();
     characterRuntime.dispose();
+    hitSystem.dispose();
+    attackMagnetism.dispose();
     dummyNpc.dispose();
     targetLock.dispose();
     controllerRig.dispose();

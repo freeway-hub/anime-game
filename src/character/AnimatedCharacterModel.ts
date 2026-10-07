@@ -156,7 +156,7 @@ export class AnimatedCharacterModel {
   }
 
   playHitReaction() {
-    if (!this.characterStores.status.isOnGround) return;
+    if (!this.characterStores.status.isOnGround) return false;
     const reactionName = hitReactionActionNames[this.nextHitReactionIndex];
     this.nextHitReactionIndex =
       (this.nextHitReactionIndex + 1) % hitReactionActionNames.length;
@@ -166,6 +166,7 @@ export class AnimatedCharacterModel {
       : previousActionName;
     this.playAction(reactionName, crossFadeFrom);
     this.previousActionName = reactionName;
+    return true;
   }
 
   setShadowSettings(settings: CharacterShadowSettings) {

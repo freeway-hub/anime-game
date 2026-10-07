@@ -159,6 +159,12 @@ export function createCharacterModelRuntime(
         `LOADING ${shortenName(name)}`
       );
     },
+    playHitReaction() {
+      return currentModel?.playHitReaction() ?? false;
+    },
+    getPunchProgress() {
+      return currentModel?.getPunchProgress() ?? null;
+    },
     showMessage(message: string, duration = 2) {
       setNoticeMessage(message, duration);
     },

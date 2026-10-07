@@ -125,19 +125,23 @@ body,
   text-align: center;
 }
 
-.inspector-panel-open .controlKeys {
+.inspector-panel-open .controlKeysFrame {
   visibility: hidden;
   opacity: 0;
   transition: none;
 }
 
-.controlKeys {
+.controlKeysFrame {
   position: absolute;
   width: 18rem;
   left: 1.25rem;
-  margin-left: 0;
   bottom: 8%;
   z-index: 10;
+}
+
+.controlKeys {
+  display: block;
+  width: 100%;
   opacity: 0.82;
   transition: opacity 120ms ease 320ms, visibility 0s linear 320ms;
   user-select: none;
@@ -147,14 +151,15 @@ body,
   -ms-user-select: none;
 }
 
+
 @media (max-width: 768px) {
-  .controlKeys {
+  .controlKeysFrame {
     display: none;
   }
 }
 
 @media (max-height: 450px) {
-  .controlKeys {
+  .controlKeysFrame {
     display: none;
   }
 }
