@@ -11,7 +11,7 @@ test("hitstop freezes simulation for its configured duration", () => {
   assert.equal(hitStop.active, true);
   assert.equal(hitStop.update(0.03), 0);
   assert.equal(hitStop.active, true);
-  assert.equal(hitStop.update(0.045), 0);
+  assert.equal(hitStop.update(0.08), 0);
   assert.equal(hitStop.active, false);
   assert.equal(hitStop.update(0.016), 0.016);
 });
@@ -23,5 +23,5 @@ test("hitstop keeps the strongest overlapping trigger", () => {
   assert.equal(hitStop.update(0.05), 0);
   assert.equal(hitStop.update(0.03), 0);
   assert.equal(hitStop.active, false);
-  assert.equal(defaultHitStopDurationSeconds, 0.075);
+  assert.equal(defaultHitStopDurationSeconds, 0.11);
 });

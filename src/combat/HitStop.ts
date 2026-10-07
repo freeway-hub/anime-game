@@ -1,4 +1,4 @@
-export const defaultHitStopDurationSeconds = 0.075;
+export const defaultHitStopDurationSeconds = 0.11;
 
 export interface HitStop {
   readonly active: boolean;
