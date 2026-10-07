@@ -53,5 +53,5 @@ function tryHitTarget(
 ) {
   if (!target?.receiveHit) return false;
   if (playerPosition.distanceTo(target.group.position) > PUNCH_HIT_RANGE) return false;
-  return target.receiveHit();
+  return target.receiveHit(playerPosition);
 }

@@ -4,7 +4,7 @@ import type BVHEcctrl from "../lib/ecctrl/BVHEcctrl";
 
 export interface TargetLockTarget {
   readonly group: THREE.Object3D;
-  readonly receiveHit?: () => boolean;
+  readonly receiveHit?: (sourcePosition: THREE.Vector3) => boolean;
 }
 
 export interface TargetLock {
