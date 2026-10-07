@@ -1,6 +1,6 @@
 export const punchButtonId = "punch";
 export const punchMinIntervalSeconds = 0.3;
-export const punchChainWindowProgress = 0.62;
+export const punchChainWindowProgress = 0.5;
 
 export function shouldStartPunchAction(
   currentTime: number,

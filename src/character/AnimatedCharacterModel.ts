@@ -295,11 +295,8 @@ export class AnimatedCharacterModel {
 
     const punchName = punchActionNames[this.nextPunchIndex];
     const previousActionName = this.previousActionName;
-    const crossFadeFrom = isPunchActionName(previousActionName)
-      ? getActionName(this.characterStores.animationStore.getState().animationStatus)
-      : previousActionName;
 
-    this.playAction(punchName, crossFadeFrom);
+    this.playAction(punchName, previousActionName);
     this.previousActionName = punchName;
     this.nextPunchIndex = (this.nextPunchIndex + 1) % punchActionNames.length;
   }
