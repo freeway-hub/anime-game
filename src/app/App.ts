@@ -9,6 +9,7 @@ import { createShadowRig } from "../scene/ShadowRig";
 import { createSkyRig } from "../scene/SkyRig";
 import { waitForNextFrame } from "../utils/FrameYield";
 import { createCameraRig } from "./CameraRig";
+import { createCameraShake } from "./CameraShake";
 import { createController } from "./Controller";
 import { createHud } from "./Hud";
 import { createInspector } from "./Inspector";
@@ -78,6 +79,7 @@ export function createApp({
     controllerRig.controller.group.position
   );
   const hitStop = createHitStop();
+  const cameraShake = createCameraShake();
   const attackMagnetism = createAttackMagnetism(
     controllerRig.controller,
     characterRuntime,
@@ -144,11 +146,16 @@ export function createApp({
     level.update(simulationDelta, simulationElapsed);
     updateController(simulationDelta, simulationElapsed, levelEditing);
     characterRuntime.update(simulationDelta, simulationElapsed);
-    if (hitSystem.update()) hitStop.trigger();
+    if (hitSystem.update()) {
+      hitStop.trigger();
+      cameraShake.trigger();
+    }
+    cameraShake.update(delta);
     attackMagnetism.update(simulationDelta);
     dummyNpc?.update(simulationDelta, simulationElapsed);
     cameraRig.setTargetLockTarget(targetLock.target ? targetLock.target.group : null);
     cameraRig.update(delta);
+    cameraShake.apply(camera);
     skyRig.update();
     renderGraph.render();
     if (pendingInitialShadowRebuild) {
@@ -177,6 +184,7 @@ export function createApp({
     level.dispose();
     characterRuntime.dispose();
     hitSystem.dispose();
+    cameraShake.reset();
     attackMagnetism.dispose();
     dummyNpc.dispose();
     targetLock.dispose();
