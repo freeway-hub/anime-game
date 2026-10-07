@@ -1,10 +1,17 @@
 export const punchButtonId = "punch";
-export const punchMinIntervalSeconds = 0.5;
+export const punchMinIntervalSeconds = 0.3;
+export const punchChainWindowProgress = 0.62;
 
 export function shouldStartPunchAction(
   currentTime: number,
   nextAllowedTime: number,
-  punchPlaying: boolean
+  punchPlaying: boolean,
+  punchProgress: number | null
 ) {
-  return !punchPlaying && currentTime >= nextAllowedTime;
+  if (!punchPlaying) return currentTime >= nextAllowedTime;
+  return (
+    punchProgress !== null &&
+    punchProgress >= punchChainWindowProgress &&
+    currentTime >= nextAllowedTime
+  );
 }

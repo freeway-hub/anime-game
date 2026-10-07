@@ -13,6 +13,7 @@ import {
   shouldStartPunchAction,
 } from "./ActionContract";
 import {
+  hitReactionActionNames,
   punchActionName,
   punchActionNames,
   requiredAnimationClipNames,
@@ -46,6 +47,7 @@ const oneShotActions: ReadonlySet<string> = new Set([
   statusToActionMap.JUMP_START,
   statusToActionMap.JUMP_LAND,
   ...punchActionNames,
+  ...hitReactionActionNames,
 ]);
 
 export class AnimatedCharacterModel {
@@ -61,6 +63,7 @@ export class AnimatedCharacterModel {
   private previousActionName: string = getActionName("IDLE");
   private nextPunchTime = 0;
   private nextPunchIndex = 0;
+  private nextHitReactionIndex = 0;
   private canPlayNext = true;
   private disposed = false;
 
@@ -143,6 +146,26 @@ export class AnimatedCharacterModel {
     this.mixer.update(delta);
     this.vrm.update(delta);
     this.footIK.update(delta);
+  }
+
+  getPunchProgress() {
+    if (!isPunchActionName(this.previousActionName) || this.canPlayNext) return null;
+    const action = this.actions.get(this.previousActionName);
+    if (!action) return null;
+    return Math.min(action.time / action.getClip().duration, 1);
+  }
+
+  playHitReaction() {
+    if (!this.characterStores.status.isOnGround) return;
+    const reactionName = hitReactionActionNames[this.nextHitReactionIndex];
+    this.nextHitReactionIndex =
+      (this.nextHitReactionIndex + 1) % hitReactionActionNames.length;
+    const previousActionName = this.previousActionName;
+    const crossFadeFrom = isPunchActionName(previousActionName)
+      ? getActionName(this.characterStores.animationStore.getState().animationStatus)
+      : previousActionName;
+    this.playAction(reactionName, crossFadeFrom);
+    this.previousActionName = reactionName;
   }
 
   setShadowSettings(settings: CharacterShadowSettings) {
@@ -230,7 +253,11 @@ export class AnimatedCharacterModel {
     nextAction.reset();
     if (oneShotActions.has(nextActionName)) {
       this.canPlayNext = false;
-      nextAction.timeScale = 1.6;
+      nextAction.timeScale = hitReactionActionNames.includes(
+        nextActionName as (typeof hitReactionActionNames)[number]
+      )
+        ? 1
+        : 1.6;
       nextAction.setLoop(THREE.LoopOnce, 1);
       nextAction.clampWhenFinished = true;
       if (previousAction) nextAction.crossFadeFrom(previousAction, 0.1, false);
@@ -251,7 +278,17 @@ export class AnimatedCharacterModel {
 
     const currentTime = this.mixer.time;
     const punchPlaying = isPunchActionName(this.previousActionName) && !this.canPlayNext;
-    if (!shouldStartPunchAction(currentTime, this.nextPunchTime, punchPlaying)) return;
+    const punchProgress = punchPlaying ? this.getPunchProgress() : null;
+    if (
+      !shouldStartPunchAction(
+        currentTime,
+        this.nextPunchTime,
+        punchPlaying,
+        punchProgress
+      )
+    ) {
+      return;
+    }
 
     this.nextPunchTime = currentTime + punchMinIntervalSeconds;
     this.setAttackState(true);
