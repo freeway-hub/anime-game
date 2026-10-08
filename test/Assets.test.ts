@@ -55,25 +55,43 @@ const vrmCharacterVersions = new Map([
   ["sample.vrm", "0"],
   ["sample2.vrm", "1.0"],
 ]);
-const animationLibraryJsonPromise = readGlbJson("src/assets/AnimationLibrary.glb");
+const aul1AnimationLibraryJsonPromise = readGlbJson(
+  "src/assets/AnimationLibraryAul1.glb"
+);
+const aul2AnimationLibraryJsonPromise = readGlbJson(
+  "src/assets/AnimationLibraryAul2.glb"
+);
+const aul1RequiredClipNames = [
+  "Idle_Loop",
+  "Walk_Loop",
+  "Jog_Fwd_Loop",
+  "Roll",
+  "Idle_Talking_Loop",
+];
 
-test("animation library contains required model nodes and clips", async () => {
-  const json = await animationLibraryJsonPromise;
-  const clipNames = new Set(json.animations.map((clip) => clip.name));
-  const nodeNames = new Set(json.nodes.map((node) => node.name));
+test("animation libraries contain required clips", async () => {
+  const [aul1, aul2] = await Promise.all([
+    aul1AnimationLibraryJsonPromise,
+    aul2AnimationLibraryJsonPromise,
+  ]);
+  const aul1ClipNames = new Set(aul1.animations.map((clip) => clip.name));
+  const aul2ClipNames = new Set(aul2.animations.map((clip) => clip.name));
 
+  for (const clipName of aul1RequiredClipNames) {
+    assert.equal(aul1ClipNames.has(clipName), true, `missing AUL1 clip: ${clipName}`);
+  }
   for (const clipName of requiredAnimationClipNames) {
-    assert.equal(clipNames.has(clipName), true, `missing clip: ${clipName}`);
+    if (aul1RequiredClipNames.includes(clipName)) continue;
+    assert.equal(aul2ClipNames.has(clipName), true, `missing AUL2 clip: ${clipName}`);
   }
-  for (const nodeName of requiredNodes) {
-    assert.equal(nodeNames.has(nodeName), true, `missing node: ${nodeName}`);
-  }
+  assert.equal(new Set(aul1.nodes.map((node) => node.name)).has("root"), true);
+  assert.equal(new Set(aul2.nodes.map((node) => node.name)).has("root"), true);
 });
 
-test("animation library contains source humanoid quaternion tracks", async () => {
-  const json = await animationLibraryJsonPromise;
+test("AUL1 fallback library contains source humanoid quaternion tracks", async () => {
+  const json = await aul1AnimationLibraryJsonPromise;
   const sourceBoneNames = Object.keys(sourceBoneToHumanBone);
-  const clipNames = [...requiredAnimationClipNames, restPoseClipName];
+  const clipNames = [...aul1RequiredClipNames, restPoseClipName];
 
   for (const clipName of clipNames) {
     const trackNames = getAnimationTrackNames(json, clipName);

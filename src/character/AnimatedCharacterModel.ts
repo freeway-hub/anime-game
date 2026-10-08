@@ -28,6 +28,7 @@ import {
 } from "./CharacterShadowSettings";
 import { CharacterFootIK } from "./FootIK";
 import { retargetHumanoidAnimationClips } from "./VrmAnimation";
+import { adaptAul2AnimationClips } from "./Aul2AnimationAdapter";
 import { getVrmMetaVersion, isVrm0 } from "./VrmMeta";
 import { enableCharacterAoMaskLayer } from "../scene/RenderLayers";
 import { waitForNextFrame } from "../utils/FrameYield";
@@ -36,8 +37,12 @@ import {
 } from "../lib/ecctrl/index";
 import { playerCharacterStores, type CharacterStores } from "../lib/ecctrl/stores/ActorStores";
 
-const animationLibraryUrl = new URL(
-  "../assets/AnimationLibrary.glb",
+const aul1AnimationLibraryUrl = new URL(
+  "../assets/AnimationLibraryAul1.glb",
+  import.meta.url
+).href;
+const aul2AnimationLibraryUrl = new URL(
+  "../assets/AnimationLibraryAul2.glb",
   import.meta.url
 ).href;
 export const playerDefaultVrm = {
@@ -49,7 +54,7 @@ export const sampleVrms = [
   { name: "sample.vrm", url: new URL("../assets/sample.vrm", import.meta.url).href },
   { name: "sample2.vrm", url: new URL("../assets/sample2.vrm", import.meta.url).href },
 ] as const;
-let animationLibraryPromise: ReturnType<typeof loadAnimationLibraryGltf> | null = null;
+let animationLibraryPromise: ReturnType<typeof loadAnimationLibraries> | null = null;
 
 const oneShotActions: ReadonlySet<string> = new Set([
   statusToActionMap.JUMP_START,
@@ -79,7 +84,7 @@ export class AnimatedCharacterModel {
 
   constructor(
     vrm: VRM,
-    animationGltf: Awaited<ReturnType<GLTFLoader["loadAsync"]>>,
+    animationGltf: { animations: THREE.AnimationClip[] },
     sourceName: string,
     characterStores: CharacterStores = playerCharacterStores
   ) {
@@ -100,7 +105,7 @@ export class AnimatedCharacterModel {
     );
     const punchClip = clips.find((clip) => clip.name === punchActionName);
     if (!punchClip) {
-      throw new Error(`AnimationLibrary.glb is missing clip: ${punchActionName}`);
+      throw new Error(`Active animation libraries are missing clip: ${punchActionName}`);
     }
     for (const clip of clips) {
       this.actions.set(clip.name, this.mixer.clipAction(clip));
@@ -404,12 +409,22 @@ function getActionName(status: CharacterAnimationStatus) {
 }
 
 function loadAnimationLibrary() {
-  animationLibraryPromise ??= loadAnimationLibraryGltf();
+  animationLibraryPromise ??= loadAnimationLibraries();
   return animationLibraryPromise;
 }
 
-function loadAnimationLibraryGltf() {
-  return loadGltfFromUrl(animationLibraryUrl, new GLTFLoader());
+async function loadAnimationLibraries() {
+  const [aul1, aul2] = await Promise.all([
+    loadGltfFromUrl(aul1AnimationLibraryUrl, new GLTFLoader()),
+    loadGltfFromUrl(aul2AnimationLibraryUrl, new GLTFLoader()),
+  ]);
+
+  return {
+    animations: [
+      ...aul1.animations,
+      ...adaptAul2AnimationClips(aul2.animations),
+    ],
+  };
 }
 
 async function loadVrm(url: string) {
