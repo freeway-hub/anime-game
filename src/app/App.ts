@@ -83,7 +83,8 @@ export function createApp({
     () => targetLock.target !== null,
     undefined,
     undefined,
-    (value) => characterRuntime.setMouthOpen(value)
+    (value) => characterRuntime.setMouthOpen(value),
+    (active) => characterRuntime.setIdleTalking(active)
   );
   const hitSystem = createHitSystem(
     characterRuntime,

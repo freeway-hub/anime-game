@@ -22,7 +22,8 @@ export function createNpcVoiceInteraction(
   isTargetLocked: () => boolean,
   setStatus?: (text: string) => void,
   log?: (message: string, details?: unknown) => void,
-  setPlayerMouthOpen?: (value: number) => void
+  setPlayerMouthOpen?: (value: number) => void,
+  setPlayerIdleTalking?: (active: boolean) => void
 ): NpcVoiceInteraction {
   const conversations = new Map<Npc, NpcConversation>();
   const indicators = new Map<Npc, ReturnType<typeof createSpeakerIndicator>>();
@@ -240,7 +241,7 @@ export function createNpcVoiceInteraction(
       recordingPlayerMouthTarget = 0;
       recordingPlayerMouthOpen = 0;
       setPlayerMouthOpen?.(0);
-      player.setIdleTalking(false);
+      setPlayerIdleTalking?.(false);
       const duration = performance.now() - recordingStartedAt;
       const audio = new Blob(chunks, { type: mimeType });
       if (selectedNpc && duration >= MIN_RECORDING_MS && audio.size > 0) {
@@ -252,7 +253,7 @@ export function createNpcVoiceInteraction(
       chunks = [];
     };
     recorder.start();
-    player.setIdleTalking(true);
+    setPlayerIdleTalking?.(true);
     log?.("Microphone recording started", npc.name);
     setStatus?.("LISTENING");
   };
