@@ -61,7 +61,7 @@ const aul1AnimationLibraryJsonPromise = readGlbJson(
 const aul2AnimationLibraryJsonPromise = readGlbJson(
   "src/assets/AnimationLibraryAul2.glb"
 );
-const aul2RequiredClipNames = ["Melee_Hook", "OverhandThrow"];
+const aul2RequiredClipNames = ["Melee_Hook", "OverhandThrow", "Hit_Knockback"];
 
 const aul1RequiredClipNames = [
   "Idle_Loop",

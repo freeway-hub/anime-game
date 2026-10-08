@@ -43,8 +43,8 @@ export class Npc {
     this.runtime.setIdleTalking(active);
   }
 
-  receiveHit(sourcePosition: THREE.Vector3) {
-    const hitConfirmed = this.runtime.playHitReaction();
+  receiveHit(sourcePosition: THREE.Vector3, heavy = false) {
+    const hitConfirmed = this.runtime.playHitReaction(heavy);
     if (hitConfirmed) this.knockback.triggerFrom(sourcePosition);
     return hitConfirmed;
   }

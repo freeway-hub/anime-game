@@ -1,4 +1,5 @@
 export const punchButtonId = "punch";
+export const heavyAttackButtonId = "heavy-attack";
 export const punchMinIntervalSeconds = 0.3;
 export const punchChainWindowProgress = 0.5;
 

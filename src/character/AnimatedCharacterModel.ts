@@ -8,11 +8,14 @@ import {
 import { MToonNodeMaterial } from "@pixiv/three-vrm/nodes";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
+  heavyAttackButtonId,
   punchButtonId,
   punchMinIntervalSeconds,
   shouldStartPunchAction,
 } from "./ActionContract";
 import {
+  heavyAttackActionNames,
+  heavyHitReactionActionName,
   hitReactionActionNames,
   idleTalkingActionName,
   punchActionName,
@@ -60,6 +63,8 @@ const oneShotActions: ReadonlySet<string> = new Set([
   statusToActionMap.JUMP_START,
   statusToActionMap.JUMP_LAND,
   ...punchActionNames,
+  ...heavyAttackActionNames,
+  heavyHitReactionActionName,
   ...hitReactionActionNames,
   rollActionName,
 ]);
@@ -77,6 +82,8 @@ export class AnimatedCharacterModel {
   private previousActionName: string = getActionName("IDLE");
   private nextPunchTime = 0;
   private nextPunchIndex = 0;
+  private nextHeavyAttackTime = 0;
+  private nextHeavyAttackIndex = 0;
   private nextHitReactionIndex = 0;
   private canPlayNext = true;
   private idleTalking = false;
@@ -216,11 +223,15 @@ export class AnimatedCharacterModel {
     return true;
   }
 
-  playHitReaction() {
+  playHitReaction(heavy = false) {
     if (!this.characterStores.status.isOnGround) return false;
-    const reactionName = hitReactionActionNames[this.nextHitReactionIndex];
-    this.nextHitReactionIndex =
-      (this.nextHitReactionIndex + 1) % hitReactionActionNames.length;
+    const reactionName = heavy
+      ? heavyHitReactionActionName
+      : hitReactionActionNames[this.nextHitReactionIndex];
+    if (!heavy) {
+      this.nextHitReactionIndex =
+        (this.nextHitReactionIndex + 1) % hitReactionActionNames.length;
+    }
     const previousActionName = this.previousActionName;
     const crossFadeFrom = isPunchActionName(previousActionName)
       ? getActionName(this.characterStores.animationStore.getState().animationStatus)
@@ -265,9 +276,8 @@ export class AnimatedCharacterModel {
       this.playStatus(state.animationStatus);
     });
     const unsubscribeButtons = this.characterStores.buttonStore.subscribe((state, previousState) => {
-      if (state.buttons[punchButtonId] && !previousState.buttons[punchButtonId]) {
-        this.playPunch();
-      }
+      if (state.buttons[punchButtonId] && !previousState.buttons[punchButtonId]) this.playPunch();
+      if (state.buttons[heavyAttackButtonId] && !previousState.buttons[heavyAttackButtonId]) this.playHeavyAttack();
     });
     this.playInitialIdle();
     this.playStatus(this.characterStores.animationStore.getState().animationStatus);
@@ -316,9 +326,10 @@ export class AnimatedCharacterModel {
     nextAction.reset();
     if (oneShotActions.has(nextActionName)) {
       this.canPlayNext = false;
-      nextAction.timeScale = hitReactionActionNames.includes(
-        nextActionName as (typeof hitReactionActionNames)[number]
-      )
+      nextAction.timeScale =
+        hitReactionActionNames.includes(
+          nextActionName as (typeof hitReactionActionNames)[number]
+        ) || nextActionName === heavyHitReactionActionName
         ? 1
         : nextActionName === rollActionName
           ? 1
@@ -366,6 +377,27 @@ export class AnimatedCharacterModel {
     this.nextPunchIndex = (this.nextPunchIndex + 1) % punchActionNames.length;
   }
 
+  private playHeavyAttack() {
+    if (!this.characterStores.status.isOnGround) return;
+    const currentTime = this.mixer.time;
+    const heavyPlaying = isHeavyAttackActionName(this.previousActionName) && !this.canPlayNext;
+    const heavyProgress = heavyPlaying ? this.getHeavyAttackProgress() : null;
+    if (!shouldStartPunchAction(currentTime, this.nextHeavyAttackTime, heavyPlaying, heavyProgress)) return;
+    this.nextHeavyAttackTime = currentTime + punchMinIntervalSeconds;
+    this.setAttackState(true);
+    const heavyName = heavyAttackActionNames[this.nextHeavyAttackIndex];
+    this.playAction(heavyName, this.previousActionName);
+    this.previousActionName = heavyName;
+    this.nextHeavyAttackIndex = (this.nextHeavyAttackIndex + 1) % heavyAttackActionNames.length;
+  }
+
+  getHeavyAttackProgress() {
+    if (!isHeavyAttackActionName(this.previousActionName) || this.canPlayNext) return null;
+    const action = this.actions.get(this.previousActionName);
+    if (!action) return null;
+    return Math.min(action.time / action.getClip().duration, 1);
+  }
+
   private setAttackState(attacking: boolean) {
     this.characterStores.status.isAttacking = attacking;
     if (attacking && this.characterStores.status.isOnGround) {
@@ -382,7 +414,7 @@ export class AnimatedCharacterModel {
       oneShotActions.has(actionName)
     ) {
       this.allowNextAction();
-      if (isPunchActionName(actionName)) this.setAttackState(false);
+      if (isPunchActionName(actionName) || isHeavyAttackActionName(actionName)) this.setAttackState(false);
     }
   };
 
@@ -402,6 +434,12 @@ export class AnimatedCharacterModel {
 
 function isPunchActionName(actionName: string) {
   return punchActionNames.includes(actionName as (typeof punchActionNames)[number]);
+}
+
+function isHeavyAttackActionName(actionName: string) {
+  return heavyAttackActionNames.includes(
+    actionName as (typeof heavyAttackActionNames)[number]
+  );
 }
 
 function getActionName(status: CharacterAnimationStatus) {

@@ -1,11 +1,8 @@
 import type { CharacterAnimationStatus } from "../lib/ecctrl/index";
 
-export const punchActionNames = [
-  "Punch_Jab",
-  "Punch_Cross",
-  "Melee_Hook",
-  "OverhandThrow",
-] as const;
+export const punchActionNames = ["Punch_Jab", "Punch_Cross"] as const;
+export const heavyAttackActionNames = ["Melee_Hook", "OverhandThrow"] as const;
+export const heavyHitReactionActionName = "Hit_Knockback";
 export const punchActionName = punchActionNames[0];
 export const hitReactionActionNames = ["Hit_Chest", "Hit_Head"] as const;
 export const rollActionName = "Roll";
@@ -25,6 +22,8 @@ export const requiredAnimationClipNames = Array.from(
   new Set([
     ...Object.values(statusToActionMap),
     ...punchActionNames,
+    ...heavyAttackActionNames,
+    heavyHitReactionActionName,
     ...hitReactionActionNames,
     rollActionName,
     idleTalkingActionName,

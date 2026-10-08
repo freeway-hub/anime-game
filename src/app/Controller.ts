@@ -6,7 +6,7 @@ import BVHEcctrl, {
   useButtonStore,
   type MovementInput,
 } from "../lib/ecctrl/index";
-import { punchButtonId } from "../character/ActionContract";
+import { heavyAttackButtonId, punchButtonId } from "../character/ActionContract";
 
 const CONTROLLER_RUN_AIR_DRAG_FACTOR = 0.3;
 const CONTROLLER_WALK_AIR_DRAG_FACTOR = 0.55;
@@ -216,6 +216,13 @@ function createMousePunchInput(canvas: HTMLCanvasElement): ToggleableControl {
 
   const press = (event: MouseEvent) => {
     if (!inputEnabled) return;
+    if (event.button === 2) {
+      event.preventDefault();
+      const store = useButtonStore.getState();
+      store.setButtonActive(heavyAttackButtonId, true, MOUSE_PUNCH_SOURCE);
+      store.setButtonActive(heavyAttackButtonId, false, MOUSE_PUNCH_SOURCE);
+      return;
+    }
     if (event.button !== 0) return;
     pressStart = {
       button: event.button,

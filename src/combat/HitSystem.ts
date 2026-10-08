@@ -18,40 +18,60 @@ export function createHitSystem(
   playerPosition: Vector3
 ): HitSystem {
   let previousPunchProgress: number | null = null;
+  let previousHeavyProgress: number | null = null;
   let disposed = false;
 
   return {
     update() {
       if (disposed) return false;
-      const progress = characterRuntime.getPunchProgress();
-      if (progress === null) {
+
+      const punchProgress = characterRuntime.getPunchProgress();
+      const heavyProgress = characterRuntime.getHeavyAttackProgress();
+      let hitConfirmed = false;
+
+      if (punchProgress === null) {
         previousPunchProgress = null;
-        return false;
+      } else {
+        if (
+          previousPunchProgress !== null &&
+          previousPunchProgress < PUNCH_HIT_PROGRESS &&
+          punchProgress >= PUNCH_HIT_PROGRESS
+        ) {
+          hitConfirmed = tryHitTarget(targetLock.target, playerPosition, false) || hitConfirmed;
+        }
+        previousPunchProgress = punchProgress;
       }
 
-      let hitConfirmed = false;
-      if (
-        previousPunchProgress !== null &&
-        previousPunchProgress < PUNCH_HIT_PROGRESS &&
-        progress >= PUNCH_HIT_PROGRESS
-      ) {
-        hitConfirmed = tryHitTarget(targetLock.target, playerPosition);
+      if (heavyProgress === null) {
+        previousHeavyProgress = null;
+      } else {
+        if (
+          previousHeavyProgress !== null &&
+          previousHeavyProgress < PUNCH_HIT_PROGRESS &&
+          heavyProgress >= PUNCH_HIT_PROGRESS
+        ) {
+          hitConfirmed = tryHitTarget(targetLock.target, playerPosition, true) || hitConfirmed;
+        }
+        previousHeavyProgress = heavyProgress;
       }
-      previousPunchProgress = progress;
+
       return hitConfirmed;
     },
     dispose() {
       disposed = true;
       previousPunchProgress = null;
+      previousHeavyProgress = null;
     },
   };
 }
 
 function tryHitTarget(
   target: TargetLockTarget | null,
-  playerPosition: Vector3
+  playerPosition: Vector3,
+  heavy: boolean
 ) {
   if (!target?.receiveHit) return false;
   if (playerPosition.distanceTo(target.group.position) > PUNCH_HIT_RANGE) return false;
-  return target.receiveHit(playerPosition);
+  return target.receiveHit(playerPosition, heavy);
+
 }

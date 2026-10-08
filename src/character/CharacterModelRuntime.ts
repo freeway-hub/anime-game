@@ -165,8 +165,11 @@ export function createCharacterModelRuntime(
     getRollProgress() {
       return currentModel?.getRollProgress() ?? null;
     },
-    playHitReaction() {
-      return currentModel?.playHitReaction() ?? false;
+    playHitReaction(heavy = false) {
+      return currentModel?.playHitReaction(heavy) ?? false;
+    },
+    getHeavyAttackProgress() {
+      return currentModel?.getHeavyAttackProgress() ?? null;
     },
     getPunchProgress() {
       return currentModel?.getPunchProgress() ?? null;
