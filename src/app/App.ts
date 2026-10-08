@@ -102,7 +102,8 @@ export function createApp({
   const combatDebug = createCombatDebug(
     scene,
     controllerRig.controller.group,
-    dummyNpc.group
+    dummyNpc.group,
+    () => dummyNpc.canReceiveHit()
   );
   let sampleVrmIndex = 0;
   const characterFileControls = {

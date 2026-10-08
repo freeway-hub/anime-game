@@ -65,14 +65,16 @@ export class Npc {
     this.runtime.setIdleTalking(active);
   }
 
+  canReceiveHit() {
+    if (this.heavyRecoveryRemaining > 0) return false;
+    if (!this.heavyRecoveryWaitingForReaction) return true;
+    const progress = this.runtime.getHeavyHitReactionProgress();
+    return progress !== null && progress < 1;
+  }
+
   receiveHit(sourcePosition: THREE.Vector3, heavy = false) {
-    if (
-      this.heavyRecoveryWaitingForReaction ||
-      this.heavyRecoveryRemaining > 0 ||
-      !this.controller.controller.characterStatus.isOnGround
-    ) {
-      return true;
-    }
+    if (!this.canReceiveHit()) return false;
+    if (!this.controller.controller.characterStatus.isOnGround) return false;
 
     const hitConfirmed = this.runtime.playHitReaction(heavy);
     if (!hitConfirmed) return false;

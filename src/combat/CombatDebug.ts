@@ -12,7 +12,8 @@ export interface CombatDebug {
 export function createCombatDebug(
   scene: THREE.Scene,
   player: THREE.Object3D,
-  npc: THREE.Object3D
+  npc: THREE.Object3D,
+  npcCanReceiveHit: () => boolean
 ): CombatDebug {
   const root = new THREE.Group();
   root.visible = false;
@@ -46,7 +47,9 @@ export function createCombatDebug(
       if (!root.visible) return;
       playerCapsule.position.copy(player.position);
       npcCapsule.position.copy(npc.position);
+      npcCapsule.visible = npcCanReceiveHit();
       npcHitRange.position.copy(npc.position);
+      npcHitRange.visible = npcCanReceiveHit();
     },
     dispose() {
       window.removeEventListener("keydown", onKeyDown);

@@ -6,6 +6,7 @@ import { createTargetIndicator } from "../ui/TargetIndicator";
 export interface TargetLockTarget {
   readonly group: THREE.Object3D;
   readonly receiveHit?: (sourcePosition: THREE.Vector3, heavy?: boolean) => boolean;
+  readonly canReceiveHit?: () => boolean;
 }
 
 export interface TargetLock {
