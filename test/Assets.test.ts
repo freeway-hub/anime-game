@@ -61,6 +61,8 @@ const aul1AnimationLibraryJsonPromise = readGlbJson(
 const aul2AnimationLibraryJsonPromise = readGlbJson(
   "src/assets/AnimationLibraryAul2.glb"
 );
+const aul2RequiredClipNames = ["Melee_Hook", "OverhandThrow"];
+
 const aul1RequiredClipNames = [
   "Idle_Loop",
   "Walk_Loop",
@@ -87,11 +89,18 @@ test("animation libraries contain required clips", async () => {
   for (const clipName of aul1RequiredClipNames) {
     assert.equal(aul1ClipNames.has(clipName), true, `missing AUL1 clip: ${clipName}`);
   }
-  for (const clipName of requiredAnimationClipNames) {
+  for (const clipName of requiredAnimationClipNames.filter((name) => !aul2RequiredClipNames.includes(name))) {
     assert.equal(
       aul1ClipNames.has(clipName),
       true,
       `missing AUL1 clip: ${clipName}`
+    );
+  }
+  for (const clipName of aul2RequiredClipNames) {
+    assert.equal(
+      aul2ClipNames.has(clipName),
+      true,
+      `missing AUL2 clip: ${clipName}`
     );
   }
   assert.equal(new Set(aul1.nodes.map((node) => node.name)).has("root"), true);
