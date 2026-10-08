@@ -66,6 +66,10 @@ export class Npc {
   }
 
   receiveHit(sourcePosition: THREE.Vector3, heavy = false) {
+    if (this.heavyRecoveryWaitingForReaction || this.heavyRecoveryRemaining > 0) {
+      return true;
+    }
+
     const hitConfirmed = this.runtime.playHitReaction(heavy);
     if (!hitConfirmed) return false;
 
