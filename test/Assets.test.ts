@@ -67,6 +67,13 @@ const aul1RequiredClipNames = [
   "Jog_Fwd_Loop",
   "Roll",
   "Idle_Talking_Loop",
+  "Punch_Jab",
+  "Punch_Cross",
+  "Hit_Chest",
+  "Hit_Head",
+  "Jump_Start",
+  "Jump_Loop",
+  "Jump_Land",
 ];
 
 test("animation libraries contain required clips", async () => {
@@ -81,8 +88,11 @@ test("animation libraries contain required clips", async () => {
     assert.equal(aul1ClipNames.has(clipName), true, `missing AUL1 clip: ${clipName}`);
   }
   for (const clipName of requiredAnimationClipNames) {
-    if (aul1RequiredClipNames.includes(clipName)) continue;
-    assert.equal(aul2ClipNames.has(clipName), true, `missing AUL2 clip: ${clipName}`);
+    assert.equal(
+      aul1ClipNames.has(clipName),
+      true,
+      `missing AUL1 clip: ${clipName}`
+    );
   }
   assert.equal(new Set(aul1.nodes.map((node) => node.name)).has("root"), true);
   assert.equal(new Set(aul2.nodes.map((node) => node.name)).has("root"), true);
