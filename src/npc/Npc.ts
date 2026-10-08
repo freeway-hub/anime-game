@@ -12,8 +12,6 @@ export class Npc {
   private readonly knockback: Knockback;
   private heavyRecoveryWaitingForReaction = false;
   private heavyRecoveryRemaining = 0;
-  private readonly combatBounds = new THREE.Box3();
-  private readonly combatTargetPoint = new THREE.Vector3();
 
   constructor(
     camera: THREE.PerspectiveCamera,
@@ -57,8 +55,6 @@ export class Npc {
     }
     this.controller.update(delta, elapsed);
     this.runtime.update(delta, elapsed);
-    this.group.updateWorldMatrix(true, true);
-    this.combatBounds.setFromObject(this.group, true);
   }
 
   setMouthOpen(value: number) {
@@ -76,15 +72,6 @@ export class Npc {
     return progress !== null && progress < 1;
   }
 
-  getCombatBounds(target: THREE.Box3) {
-    target.copy(this.combatBounds);
-  }
-
-  getCombatTargetPoint(fromPosition: THREE.Vector3) {
-    if (!this.heavyRecoveryWaitingForReaction) return this.group.position;
-    this.combatBounds.clampPoint(fromPosition, this.combatTargetPoint);
-    return this.combatTargetPoint;
-  }
 
   receiveHit(sourcePosition: THREE.Vector3, heavy = false) {
     if (!this.canReceiveHit()) return false;

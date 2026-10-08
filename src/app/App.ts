@@ -103,9 +103,7 @@ export function createApp({
     scene,
     controllerRig.controller.group,
     dummyNpc.group,
-    () => dummyNpc.canReceiveHit(),
-    (box) => dummyNpc.getCombatBounds(box),
-    (fromPosition) => dummyNpc.getCombatTargetPoint(fromPosition)
+    () => dummyNpc.canReceiveHit()
   );
   let sampleVrmIndex = 0;
   const characterFileControls = {
