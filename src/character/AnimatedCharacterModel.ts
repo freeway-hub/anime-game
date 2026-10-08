@@ -344,7 +344,7 @@ export class AnimatedCharacterModel {
         : nextActionName === rollActionName
           ? 1
           : isHeavyAttackActionName(nextActionName)
-            ? 0.65
+            ? 0.85
             : 1.6;
       nextAction.setLoop(THREE.LoopOnce, 1);
       nextAction.clampWhenFinished = true;
@@ -411,7 +411,7 @@ export class AnimatedCharacterModel {
   }
 
   getHeavyHitReactionProgress() {
-    if (this.previousActionName !== heavyHitReactionActionName || this.canPlayNext) return null;
+    if (this.previousActionName !== heavyHitReactionActionName) return null;
     const action = this.actions.get(heavyHitReactionActionName);
     if (!action) return null;
     return Math.min(action.time / action.getClip().duration, 1);
@@ -432,6 +432,11 @@ export class AnimatedCharacterModel {
       actionName === this.previousActionName &&
       oneShotActions.has(actionName)
     ) {
+      if (actionName === heavyHitReactionActionName) {
+        this.canPlayNext = true;
+        this.setAttackState(false);
+        return;
+      }
       this.allowNextAction();
       if (isPunchActionName(actionName) || isHeavyAttackActionName(actionName)) this.setAttackState(false);
     }

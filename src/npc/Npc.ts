@@ -34,7 +34,8 @@ export class Npc {
   update(delta: number, elapsed: number) {
     this.knockback.update(delta);
     if (this.heavyRecoveryWaitingForReaction) {
-      if (this.runtime.getHeavyHitReactionProgress() === null) {
+      const reactionProgress = this.runtime.getHeavyHitReactionProgress();
+      if (reactionProgress !== null && reactionProgress >= 1) {
         this.heavyRecoveryWaitingForReaction = false;
         this.heavyRecoveryRemaining = 1;
       }
