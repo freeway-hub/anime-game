@@ -433,7 +433,6 @@ export class AnimatedCharacterModel {
       oneShotActions.has(actionName)
     ) {
       if (actionName === heavyHitReactionActionName) {
-        this.canPlayNext = true;
         this.setAttackState(false);
         return;
       }

@@ -103,7 +103,9 @@ export function createApp({
     scene,
     controllerRig.controller.group,
     dummyNpc.group,
-    () => dummyNpc.canReceiveHit()
+    () => dummyNpc.canReceiveHit(),
+    (box) => dummyNpc.getCombatBounds(box),
+    (fromPosition) => dummyNpc.getCombatTargetPoint(fromPosition)
   );
   let sampleVrmIndex = 0;
   const characterFileControls = {
@@ -171,6 +173,7 @@ export function createApp({
     level.update(simulationDelta, simulationElapsed);
     updateController(simulationDelta, simulationElapsed, levelEditing);
     characterRuntime.update(simulationDelta, simulationElapsed);
+    dummyNpc?.update(simulationDelta, simulationElapsed);
     if (hitSystem.update()) {
       hitStop.trigger();
       cameraShake.trigger();
@@ -178,7 +181,6 @@ export function createApp({
     cameraShake.update(delta);
     roll.update(simulationDelta);
     attackMagnetism.update(simulationDelta);
-    dummyNpc?.update(simulationDelta, simulationElapsed);
     combatDebug.update();
     npcVoiceInteraction.update();
     cameraRig.setTargetLockTarget(targetLock.target ? targetLock.target.group : null);

@@ -13,7 +13,9 @@ export function createCombatDebug(
   scene: THREE.Scene,
   player: THREE.Object3D,
   npc: THREE.Object3D,
-  npcCanReceiveHit: () => boolean
+  npcCanReceiveHit: () => boolean,
+  getNpcCombatBounds: (box: THREE.Box3) => void,
+  getNpcCombatTargetPoint: (fromPosition: THREE.Vector3) => THREE.Vector3
 ): CombatDebug {
   const root = new THREE.Group();
   root.visible = false;
@@ -21,6 +23,8 @@ export function createCombatDebug(
 
   const playerCapsule = createCapsule(PLAYER_CAPSULE, 0x44aaff);
   const npcCapsule = createCapsule(NPC_CAPSULE, 0xff5555);
+  const npcCombatBox = new THREE.Box3();
+  const npcCombatHelper = new THREE.Box3Helper(npcCombatBox, 0xffaa44);
   const npcHitRange = new THREE.Mesh(
     new THREE.SphereGeometry(HIT_RANGE, 24, 12),
     new THREE.MeshBasicMaterial({
@@ -32,7 +36,7 @@ export function createCombatDebug(
     })
   );
 
-  root.add(playerCapsule, npcCapsule, npcHitRange);
+  root.add(playerCapsule, npcCapsule, npcCombatHelper, npcHitRange);
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.repeat || event.code !== "F8") return;
@@ -47,15 +51,19 @@ export function createCombatDebug(
       if (!root.visible) return;
       playerCapsule.position.copy(player.position);
       npcCapsule.position.copy(npc.position);
-      npcCapsule.visible = npcCanReceiveHit();
-      npcHitRange.position.copy(npc.position);
-      npcHitRange.visible = npcCanReceiveHit();
+      const canReceiveHit = npcCanReceiveHit();
+      npcCapsule.visible = canReceiveHit;
+      getNpcCombatBounds(npcCombatBox);
+      npcCombatHelper.visible = canReceiveHit;
+      npcHitRange.position.copy(getNpcCombatTargetPoint(player.position));
+      npcHitRange.visible = canReceiveHit;
     },
     dispose() {
       window.removeEventListener("keydown", onKeyDown);
       root.removeFromParent();
       disposeObject(playerCapsule);
       disposeObject(npcCapsule);
+      npcCombatHelper.dispose();
       disposeObject(npcHitRange);
     },
   };

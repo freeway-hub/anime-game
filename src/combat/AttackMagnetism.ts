@@ -47,8 +47,10 @@ export function createAttackMagnetism(
         return;
       }
 
-      targetOffset
-        .subVectors(targetLock.target.group.position, controller.group.position);
+      const targetPoint = targetLock.target.getCombatTargetPoint
+        ? targetLock.target.getCombatTargetPoint(controller.group.position)
+        : targetLock.target.group.position;
+      targetOffset.subVectors(targetPoint, controller.group.position);
       targetOffset.y = 0;
       const distance = targetOffset.length();
       if (distance <= MAGNET_STOP_DISTANCE || distance < 1e-5) {

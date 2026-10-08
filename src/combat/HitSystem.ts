@@ -72,7 +72,10 @@ function tryHitTarget(
 ) {
   if (!target?.receiveHit) return false;
   if (target.canReceiveHit && !target.canReceiveHit()) return false;
-  if (playerPosition.distanceTo(target.group.position) > PUNCH_HIT_RANGE) return false;
+  const targetPoint = target.getCombatTargetPoint
+    ? target.getCombatTargetPoint(playerPosition)
+    : target.group.position;
+  if (playerPosition.distanceTo(targetPoint) > PUNCH_HIT_RANGE) return false;
   return target.receiveHit(playerPosition, heavy);
 
 }

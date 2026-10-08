@@ -7,6 +7,7 @@ export interface TargetLockTarget {
   readonly group: THREE.Object3D;
   readonly receiveHit?: (sourcePosition: THREE.Vector3, heavy?: boolean) => boolean;
   readonly canReceiveHit?: () => boolean;
+  readonly getCombatTargetPoint?: (fromPosition: THREE.Vector3) => THREE.Vector3;
 }
 
 export interface TargetLock {
