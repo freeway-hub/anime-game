@@ -66,7 +66,11 @@ export class Npc {
   }
 
   receiveHit(sourcePosition: THREE.Vector3, heavy = false) {
-    if (this.heavyRecoveryWaitingForReaction || this.heavyRecoveryRemaining > 0) {
+    if (
+      this.heavyRecoveryWaitingForReaction ||
+      this.heavyRecoveryRemaining > 0 ||
+      !this.controller.controller.characterStatus.isOnGround
+    ) {
       return true;
     }
 
