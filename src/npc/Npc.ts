@@ -65,6 +65,10 @@ export class Npc {
     this.runtime.setIdleTalking(active);
   }
 
+  getCombatTargetPoint(target: THREE.Vector3) {
+    return this.runtime.getCombatTargetPoint(target);
+  }
+
   canReceiveHit() {
     if (this.heavyRecoveryRemaining > 0) return false;
     if (!this.heavyRecoveryWaitingForReaction) return true;

@@ -188,6 +188,13 @@ export class AnimatedCharacterModel {
     this.playStatus(this.characterStores.animationStore.getState().animationStatus);
   }
 
+  getCombatTargetPoint(target: THREE.Vector3) {
+    const hips = this.vrm.humanoid.getNormalizedBoneNode("hips");
+    if (!hips) return target.copy(this.group.position);
+    hips.getWorldPosition(target);
+    return target;
+  }
+
   setMouthOpen(value: number) {
     const expressionManager = this.vrm.expressionManager;
     if (!expressionManager) return;

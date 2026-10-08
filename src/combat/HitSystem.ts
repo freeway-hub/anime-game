@@ -19,6 +19,7 @@ export function createHitSystem(
 ): HitSystem {
   let previousPunchProgress: number | null = null;
   let previousHeavyProgress: number | null = null;
+  const targetPoint = playerPosition.clone();
   let disposed = false;
 
   return {
@@ -37,7 +38,7 @@ export function createHitSystem(
           previousPunchProgress < PUNCH_HIT_PROGRESS &&
           punchProgress >= PUNCH_HIT_PROGRESS
         ) {
-          hitConfirmed = tryHitTarget(targetLock.target, playerPosition, false) || hitConfirmed;
+          hitConfirmed = tryHitTarget(targetLock.target, playerPosition, targetPoint, false) || hitConfirmed;
         }
         previousPunchProgress = punchProgress;
       }
@@ -50,7 +51,7 @@ export function createHitSystem(
           previousHeavyProgress < PUNCH_HIT_PROGRESS &&
           heavyProgress >= PUNCH_HIT_PROGRESS
         ) {
-          hitConfirmed = tryHitTarget(targetLock.target, playerPosition, true) || hitConfirmed;
+          hitConfirmed = tryHitTarget(targetLock.target, playerPosition, targetPoint, true) || hitConfirmed;
         }
         previousHeavyProgress = heavyProgress;
       }
@@ -68,11 +69,15 @@ export function createHitSystem(
 function tryHitTarget(
   target: TargetLockTarget | null,
   playerPosition: Vector3,
+  targetPoint: Vector3,
   heavy: boolean
 ) {
   if (!target?.receiveHit) return false;
   if (target.canReceiveHit && !target.canReceiveHit()) return false;
-  if (playerPosition.distanceTo(target.group.position) > PUNCH_HIT_RANGE) return false;
+  const combatPoint = target.getCombatTargetPoint
+    ? target.getCombatTargetPoint(targetPoint)
+    : target.group.position;
+  if (playerPosition.distanceTo(combatPoint) > PUNCH_HIT_RANGE) return false;
   return target.receiveHit(playerPosition, heavy);
 
 }

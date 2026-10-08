@@ -25,6 +25,7 @@ export function createAttackMagnetism(
   targetLock: TargetLock
 ): AttackMagnetism {
   const targetOffset = new THREE.Vector3();
+  const targetPoint = new THREE.Vector3();
   const desiredVelocity = new THREE.Vector3();
   const currentVelocity = new THREE.Vector3();
   const targetRotation = new THREE.Matrix4();
@@ -47,8 +48,10 @@ export function createAttackMagnetism(
         return;
       }
 
-      const targetPoint = targetLock.target.group.position;
-      targetOffset.subVectors(targetPoint, controller.group.position);
+      const combatPoint = targetLock.target.getCombatTargetPoint
+        ? targetLock.target.getCombatTargetPoint(targetPoint)
+        : targetLock.target.group.position;
+      targetOffset.subVectors(combatPoint, controller.group.position);
       targetOffset.y = 0;
       const distance = targetOffset.length();
       if (distance <= MAGNET_STOP_DISTANCE || distance < 1e-5) {

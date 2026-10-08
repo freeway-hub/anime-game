@@ -13,7 +13,8 @@ export function createCombatDebug(
   scene: THREE.Scene,
   player: THREE.Object3D,
   npc: THREE.Object3D,
-  npcCanReceiveHit: () => boolean
+  npcCanReceiveHit: () => boolean,
+  getNpcCombatTargetPoint: (target: THREE.Vector3) => THREE.Vector3
 ): CombatDebug {
   const root = new THREE.Group();
   root.visible = false;
@@ -49,7 +50,7 @@ export function createCombatDebug(
       npcCapsule.position.copy(npc.position);
       const canReceiveHit = npcCanReceiveHit();
       npcCapsule.visible = canReceiveHit;
-      npcHitRange.position.copy(npc.position);
+      npcHitRange.position.copy(getNpcCombatTargetPoint(npcHitRange.position));
       npcHitRange.visible = canReceiveHit;
     },
     dispose() {

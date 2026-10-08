@@ -1,4 +1,4 @@
-import type * as THREE from "three";
+import * as THREE from "three";
 import { scheduleAfterNextFrame, waitForNextFrame } from "../utils/FrameYield";
 import { AnimatedCharacterModel } from "./AnimatedCharacterModel";
 import { playerCharacterStores, type CharacterStores } from "../lib/ecctrl/stores/ActorStores";
@@ -179,6 +179,9 @@ export function createCharacterModelRuntime(
     },
     getPunchProgress() {
       return currentModel?.getPunchProgress() ?? null;
+    },
+    getCombatTargetPoint(target: THREE.Vector3) {
+      return currentModel?.getCombatTargetPoint(target) ?? target.set(0, 0, 0);
     },
     setMouthOpen(value: number) {
       currentModel?.setMouthOpen(value);

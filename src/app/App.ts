@@ -103,7 +103,8 @@ export function createApp({
     scene,
     controllerRig.controller.group,
     dummyNpc.group,
-    () => dummyNpc.canReceiveHit()
+    () => dummyNpc.canReceiveHit(),
+    (target) => dummyNpc.getCombatTargetPoint(target)
   );
   let sampleVrmIndex = 0;
   const characterFileControls = {
