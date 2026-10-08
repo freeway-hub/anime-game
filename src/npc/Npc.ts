@@ -65,8 +65,23 @@ export class Npc {
     this.runtime.setIdleTalking(active);
   }
 
-  getCombatTargetPoint(target: THREE.Vector3) {
-    return this.runtime.getCombatTargetPoint(target);
+  getCombatHitShape(
+    start: THREE.Vector3,
+    end: THREE.Vector3,
+    referencePosition?: THREE.Vector3
+  ) {
+    return this.runtime.getCombatHitShape(start, end, referencePosition);
+  }
+
+  getCombatTargetPoint(target: THREE.Vector3, referencePosition?: THREE.Vector3) {
+    return this.runtime.getCombatTargetPoint(target, referencePosition);
+  }
+
+  canBeMagnetized() {
+    if (this.knockback.active) return false;
+    if (!this.controller.controller.characterStatus.isOnGround) return false;
+    if (this.heavyRecoveryWaitingForReaction || this.heavyRecoveryRemaining > 0) return false;
+    return true;
   }
 
   canReceiveHit() {

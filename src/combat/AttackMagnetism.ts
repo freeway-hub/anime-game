@@ -36,6 +36,7 @@ export function createAttackMagnetism(
     update(delta) {
       if (disposed || !targetLock.target) return;
       if (targetLock.target.canReceiveHit && !targetLock.target.canReceiveHit()) return;
+      if (targetLock.target.canBeMagnetized && !targetLock.target.canBeMagnetized()) return;
 
       const progress =
         characterRuntime.getPunchProgress() ??
@@ -49,7 +50,7 @@ export function createAttackMagnetism(
       }
 
       const combatPoint = targetLock.target.getCombatTargetPoint
-        ? targetLock.target.getCombatTargetPoint(targetPoint)
+        ? targetLock.target.getCombatTargetPoint(targetPoint, controller.group.position)
         : targetLock.target.group.position;
       targetOffset.subVectors(combatPoint, controller.group.position);
       targetOffset.y = 0;
