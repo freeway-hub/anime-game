@@ -168,8 +168,14 @@ export function createCharacterModelRuntime(
     playHitReaction(heavy = false) {
       return currentModel?.playHitReaction(heavy) ?? false;
     },
+    playLayToIdle() {
+      return currentModel?.playLayToIdle() ?? false;
+    },
     getHeavyAttackProgress() {
       return currentModel?.getHeavyAttackProgress() ?? null;
+    },
+    getHeavyHitReactionProgress() {
+      return currentModel?.getHeavyHitReactionProgress() ?? null;
     },
     getPunchProgress() {
       return currentModel?.getPunchProgress() ?? null;

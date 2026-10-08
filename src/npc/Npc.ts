@@ -10,6 +10,8 @@ export class Npc {
   readonly name: string;
   private readonly runtime: ReturnType<typeof createCharacterModelRuntime>;
   private readonly knockback: Knockback;
+  private heavyRecoveryWaitingForReaction = false;
+  private heavyRecoveryRemaining = 0;
 
   constructor(
     camera: THREE.PerspectiveCamera,
@@ -31,6 +33,25 @@ export class Npc {
 
   update(delta: number, elapsed: number) {
     this.knockback.update(delta);
+    if (this.heavyRecoveryWaitingForReaction) {
+      if (this.runtime.getHeavyHitReactionProgress() === null) {
+        this.heavyRecoveryWaitingForReaction = false;
+        this.heavyRecoveryRemaining = 1;
+      }
+    } else if (this.heavyRecoveryRemaining > 0) {
+      this.heavyRecoveryRemaining = Math.max(0, this.heavyRecoveryRemaining - delta);
+      if (this.heavyRecoveryRemaining === 0) {
+        this.runtime.playLayToIdle();
+      }
+    }
+    if (
+      this.heavyRecoveryWaitingForReaction ||
+      this.heavyRecoveryRemaining > 0
+    ) {
+      if (this.controller.controller.characterStatus.isOnGround) {
+        this.controller.controller.resetLinVel();
+      }
+    }
     this.controller.update(delta, elapsed);
     this.runtime.update(delta, elapsed);
   }
@@ -45,11 +66,19 @@ export class Npc {
 
   receiveHit(sourcePosition: THREE.Vector3, heavy = false) {
     const hitConfirmed = this.runtime.playHitReaction(heavy);
-    if (hitConfirmed) this.knockback.triggerFrom(sourcePosition);
-    return hitConfirmed;
+    if (!hitConfirmed) return false;
+
+    this.knockback.triggerFrom(sourcePosition);
+    if (heavy) {
+      this.heavyRecoveryWaitingForReaction = true;
+      this.heavyRecoveryRemaining = 0;
+    }
+    return true;
   }
 
   dispose() {
+    this.heavyRecoveryWaitingForReaction = false;
+    this.heavyRecoveryRemaining = 0;
     this.knockback.reset();
     this.runtime.dispose();
     this.controller.dispose();

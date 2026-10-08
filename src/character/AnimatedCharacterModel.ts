@@ -16,6 +16,7 @@ import {
 import {
   heavyAttackActionNames,
   heavyHitReactionActionName,
+  heavyRecoveryActionName,
   hitReactionActionNames,
   idleTalkingActionName,
   punchActionName,
@@ -65,6 +66,7 @@ const oneShotActions: ReadonlySet<string> = new Set([
   ...punchActionNames,
   ...heavyAttackActionNames,
   heavyHitReactionActionName,
+  heavyRecoveryActionName,
   ...hitReactionActionNames,
   rollActionName,
 ]);
@@ -223,6 +225,14 @@ export class AnimatedCharacterModel {
     return true;
   }
 
+  playLayToIdle() {
+    if (!this.characterStores.status.isOnGround) return false;
+    const previousActionName = this.previousActionName;
+    this.playAction(heavyRecoveryActionName, previousActionName);
+    this.previousActionName = heavyRecoveryActionName;
+    return true;
+  }
+
   playHitReaction(heavy = false) {
     if (!this.characterStores.status.isOnGround) return false;
     const reactionName = heavy
@@ -333,7 +343,9 @@ export class AnimatedCharacterModel {
         ? 1
         : nextActionName === rollActionName
           ? 1
-          : 1.6;
+          : isHeavyAttackActionName(nextActionName)
+            ? 0.65
+            : 1.6;
       nextAction.setLoop(THREE.LoopOnce, 1);
       nextAction.clampWhenFinished = true;
       if (previousAction && previousAction !== nextAction) nextAction.crossFadeFrom(previousAction, 0.1, false);
@@ -394,6 +406,13 @@ export class AnimatedCharacterModel {
   getHeavyAttackProgress() {
     if (!isHeavyAttackActionName(this.previousActionName) || this.canPlayNext) return null;
     const action = this.actions.get(this.previousActionName);
+    if (!action) return null;
+    return Math.min(action.time / action.getClip().duration, 1);
+  }
+
+  getHeavyHitReactionProgress() {
+    if (this.previousActionName !== heavyHitReactionActionName || this.canPlayNext) return null;
+    const action = this.actions.get(heavyHitReactionActionName);
     if (!action) return null;
     return Math.min(action.time / action.getClip().duration, 1);
   }

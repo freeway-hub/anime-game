@@ -35,7 +35,9 @@ export function createAttackMagnetism(
     update(delta) {
       if (disposed || !targetLock.target) return;
 
-      const progress = characterRuntime.getPunchProgress();
+      const progress =
+        characterRuntime.getPunchProgress() ??
+        characterRuntime.getHeavyAttackProgress();
       if (
         progress === null ||
         progress < MAGNET_START_PROGRESS ||
