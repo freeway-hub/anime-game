@@ -20,6 +20,7 @@ import { createTargetLock } from "../combat/TargetLock";
 import { createHitSystem } from "../combat/HitSystem";
 import { createHitStop } from "../combat/HitStop";
 import { createAttackMagnetism } from "../combat/AttackMagnetism";
+import { createCombatDebug } from "../combat/CombatDebug";
 import { createRoll } from "../movement/Roll";
 import { createNpcVoiceInteraction } from "../ai/NpcVoiceInteraction";
 
@@ -98,6 +99,11 @@ export function createApp({
     characterRuntime,
     targetLock
   );
+  const combatDebug = createCombatDebug(
+    scene,
+    controllerRig.controller.group,
+    dummyNpc.group
+  );
   let sampleVrmIndex = 0;
   const characterFileControls = {
     loadVrmFile: () => {
@@ -172,6 +178,7 @@ export function createApp({
     roll.update(simulationDelta);
     attackMagnetism.update(simulationDelta);
     dummyNpc?.update(simulationDelta, simulationElapsed);
+    combatDebug.update();
     npcVoiceInteraction.update();
     cameraRig.setTargetLockTarget(targetLock.target ? targetLock.target.group : null);
     cameraRig.update(delta);
@@ -208,6 +215,7 @@ export function createApp({
     attackMagnetism.dispose();
     roll.dispose();
     npcVoiceInteraction.dispose();
+    combatDebug.dispose();
     dummyNpc.dispose();
     targetLock.dispose();
     controllerRig.dispose();
